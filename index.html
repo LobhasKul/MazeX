@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MazeX: Cyber Escape - Escape. Outsmart. Survive.</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="theme-cyber glow-medium">
+    <div id="game-container">
+        <!-- Reusable Toast Notification Overlay (Top Center) -->
+        <div id="toast-banner" class="toast hidden">
+            <span id="toast-text">Notification</span>
+        </div>
+
+        <!-- In-Game HUD (Non-Overlapping, Positioned Cleanly Above Canvas) -->
+        <header id="hud" class="hidden">
+            <div class="hud-top-bar">
+                <div class="hud-stat score-box">
+                    <span class="hud-label">SCORE</span>
+                    <span id="score-val" class="hud-val">0</span>
+                </div>
+                <div class="hud-stat level-box">
+                    <span class="hud-label">LEVEL</span>
+                    <span id="level-val" class="hud-val">1/15</span>
+                </div>
+                <div class="hud-stat lives-box">
+                    <span class="hud-label">LIVES</span>
+                    <div id="lives-icons" class="lives-display">
+                        <span class="heart active">❤️</span>
+                        <span class="heart active">❤️</span>
+                        <span class="heart active">❤️</span>
+                    </div>
+                </div>
+                <div class="hud-stat health-box">
+                    <span class="hud-label">HEALTH</span>
+                    <div class="health-bar-wrapper">
+                        <div id="health-bar-fill" class="health-fill"></div>
+                        <span id="health-val" class="health-text">100%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hud-bottom-bar">
+                <div class="mission-wrapper">
+                    <span id="mission-text">Collect all coins: 0/10</span>
+                </div>
+                <div id="powerup-timers" class="powerup-timers">
+                    <!-- Dynamic badges: SPEED, SHIELD, FREEZE -->
+                </div>
+                <div class="hud-buttons">
+                    <button id="btn-hud-hint" class="hud-btn hint-btn" title="Highlight path to objective [H]">
+                        HINT <span id="hint-badge">(3)</span>
+                    </button>
+                    <button id="btn-hud-pause" class="hud-btn pause-btn" title="Pause Game [P / ESC]">
+                        PAUSE
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Canvas Area -->
+        <div id="canvas-container">
+            <canvas id="gameCanvas" width="800" height="520"></canvas>
+            <canvas id="confettiCanvas" width="800" height="520" class="hidden"></canvas>
+        </div>
+
+        <!-- ================= SCREENS ================= -->
+
+        <!-- 1. MAIN MENU (Professional, Clean Horizontal Layout, Zero Emojis) -->
+        <div id="screen-menu" class="screen">
+            <div class="menu-content">
+                <h1 class="logo-title glow-cyan">MAZEX</h1>
+                <p class="logo-subtitle">ESCAPE &middot; OUTSMART &middot; SURVIVE</p>
+                <div class="menu-nav">
+                    <button id="btn-play" class="btn btn-primary btn-play-hero">PLAY</button>
+                    <div class="menu-row menu-row-secondary">
+                        <button id="btn-levels" class="btn">SELECT LEVEL</button>
+                        <button id="btn-howto" class="btn">HOW TO PLAY</button>
+                    </div>
+                    <div class="menu-row menu-row-tertiary">
+                        <button id="btn-settings" class="btn">SETTINGS</button>
+                        <button id="btn-stats" class="btn">STATISTICS</button>
+                    </div>
+                </div>
+                <div class="menu-footer">
+                    <p class="footer-tag">MazeX: Escape. Outsmart. Survive.</p>
+                    <p class="footer-credit">Designed by Lobhas Kulkarni</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. LEVEL SELECT SCREEN (5x3 Grid) -->
+        <div id="screen-levels" class="screen hidden">
+            <div class="screen-modal level-select-modal">
+                <button class="btn-modal-close" id="btn-close-levels-x" title="Close">✕</button>
+                <div class="modal-header">
+                    <h2>SELECT LEVEL</h2>
+                    <p class="modal-subtitle">Conquer all 15 cyber mazes to breach the Core</p>
+                </div>
+                <div id="level-grid" class="level-grid">
+                    <!-- Populated dynamically: 15 level cards -->
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-levels-continue" class="btn btn-continue">START</button>
+                    <button id="btn-levels-back" class="btn">BACK TO MENU</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. HOW TO PLAY SCREEN (Concise & Clean) -->
+        <div id="screen-how-to" class="screen hidden">
+            <div class="screen-modal how-to-modal">
+                <button class="btn-modal-close" id="btn-close-howto-x" title="Close">✕</button>
+                <div class="modal-header">
+                    <h2>HOW TO PLAY</h2>
+                    <p class="modal-subtitle">Tactical operations and survival guide</p>
+                </div>
+                <div class="how-to-scroll">
+                    <div class="guide-block">
+                        <h4 class="guide-title">Objective</h4>
+                        <p>Level 1 requires collecting all coins to unlock the exit portal. In Levels 2 through 15, coin collection is optional bonus score, and the exit portal is open from the start.</p>
+                    </div>
+
+                    <div class="guide-block">
+                        <h4 class="guide-title">Controls</h4>
+                        <div class="guide-pills">
+                            <span class="pill"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / <kbd>Arrows</kbd> — Move</span>
+                            <span class="pill"><kbd>H</kbd> — Hint Path</span>
+                            <span class="pill"><kbd>P</kbd> / <kbd>ESC</kbd> — Pause Game</span>
+                        </div>
+                    </div>
+
+                    <div class="guide-block">
+                        <h4 class="guide-title">Enemies &amp; Combat</h4>
+                        <ul class="guide-list">
+                            <li><strong>Enemy Collision</strong> — Touching an active pink enemy inflicts <strong>25 damage</strong>. If health drops to zero, 1 Life is lost. If all lives are lost, the mission ends.</li>
+                            <li><strong>Random Cyber Operatives</strong> — Each deployment assigns a random cyber operative with unique aesthetic armor, animations, and radar signatures.</li>
+                            <li><strong>AI Personalities</strong> — Blinky chases directly, Pinky ambushes ahead, Inky patrols fast, and Clyde guards key paths.</li>
+                        </ul>
+                    </div>
+
+                    <div class="guide-block">
+                        <h4 class="guide-title">Power-Ups</h4>
+                        <ul class="guide-list">
+                            <li><strong>Speed Overdrive</strong> — Boosts movement velocity by 60%.</li>
+                            <li><strong>Cyber Shield</strong> — Absorbs one lethal enemy collision safely.</li>
+                            <li><strong>Cryo Freeze</strong> — Freezes all enemy sentinels in place.</li>
+                        </ul>
+                    </div>
+
+                    <div class="guide-block">
+                        <h4 class="guide-title">Tactical Tips</h4>
+                        <ul class="guide-list">
+                            <li>The exit portal stays dormant until all required coins and cores are collected.</li>
+                            <li>Use hints sparingly to calculate the shortest path to objectives.</li>
+                            <li>Watch enemy gaze direction to predict incoming ambushes.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-close-how-to" class="btn">BACK TO MENU</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. STATISTICS & ACHIEVEMENTS SCREEN -->
+        <div id="screen-stats" class="screen hidden">
+            <div class="screen-modal stats-modal">
+                <button class="btn-modal-close" id="btn-close-stats-x" title="Close">✕</button>
+                <div class="modal-header">
+                    <h2>STATISTICS & ACHIEVEMENTS</h2>
+                </div>
+                <div class="stats-scroll">
+                    <!-- Key Statistics Grid -->
+                    <div class="stats-overview-grid">
+                        <div class="stat-card">
+                            <span class="stat-card-val" id="st-games">0</span>
+                            <span class="stat-card-lbl">Games Played</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-card-val" id="st-best-score">0</span>
+                            <span class="stat-card-lbl">Best Score</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-card-val" id="st-levels">0</span>
+                            <span class="stat-card-lbl">Levels Completed</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-card-val" id="st-coins">0</span>
+                            <span class="stat-card-lbl">Coins Collected</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-card-val" id="st-hints">0</span>
+                            <span class="stat-card-lbl">Hints Used</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-card-val" id="st-deaths">0</span>
+                            <span class="stat-card-lbl">Deaths</span>
+                        </div>
+                    </div>
+
+                    <!-- Achievements Section -->
+                    <div class="achievements-section">
+                        <h3 class="section-title">ACHIEVEMENTS</h3>
+                        <div id="achievements-list" class="achievements-grid">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer stats-footer">
+                    <button id="btn-stats-reset" class="btn btn-danger-small">RESET PROGRESS</button>
+                    <button id="btn-close-stats" class="btn">BACK TO MENU</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. SETTINGS SCREEN -->
+        <div id="screen-settings" class="screen hidden">
+            <div class="screen-modal settings-modal">
+                <button class="btn-modal-close" id="btn-close-settings-x" title="Close">✕</button>
+                <div class="modal-header">
+                    <h2>SETTINGS</h2>
+                    <p class="modal-subtitle">Audio, visual themes, and controls</p>
+                </div>
+                <div class="settings-form">
+                    <!-- Master Volume -->
+                    <div class="setting-row">
+                        <label for="slider-master-volume">Master Volume</label>
+                        <div class="slider-group">
+                            <input type="range" id="slider-master-volume" min="0" max="100" value="80" class="slider">
+                            <span id="val-master-volume" class="slider-val">80%</span>
+                        </div>
+                    </div>
+
+                    <!-- Music Volume & Toggle -->
+                    <div class="setting-row">
+                        <div>
+                            <label for="toggle-music">Ambient Music</label>
+                            <span class="sub-tip">Soft electronic synth pads</span>
+                        </div>
+                        <input type="checkbox" id="toggle-music" class="toggle-checkbox" checked>
+                    </div>
+                    <div class="setting-row">
+                        <label for="slider-music-volume">Music Volume</label>
+                        <div class="slider-group">
+                            <input type="range" id="slider-music-volume" min="0" max="100" value="60" class="slider">
+                            <span id="val-music-volume" class="slider-val">60%</span>
+                        </div>
+                    </div>
+
+                    <!-- SFX Volume & Toggle -->
+                    <div class="setting-row">
+                        <div>
+                            <label for="toggle-sfx">Sound Effects (SFX)</label>
+                            <span class="sub-tip">Coins, deflections, portal hums</span>
+                        </div>
+                        <input type="checkbox" id="toggle-sfx" class="toggle-checkbox" checked>
+                    </div>
+                    <div class="setting-row">
+                        <label for="slider-sfx-volume">SFX Volume</label>
+                        <div class="slider-group">
+                            <input type="range" id="slider-sfx-volume" min="0" max="100" value="80" class="slider">
+                            <span id="val-sfx-volume" class="slider-val">80%</span>
+                        </div>
+                    </div>
+
+                    <div class="setting-divider"></div>
+
+                    <!-- Visual Themes -->
+                    <div class="setting-row">
+                        <div>
+                            <label for="select-theme">Maze Visual Theme</label>
+                            <span class="sub-tip">Atmospheric color scheme</span>
+                        </div>
+                        <select id="select-theme" class="custom-select">
+                            <option value="theme-cyber" selected>Cyber Grid (Mint Cyan)</option>
+                            <option value="theme-quantum">Quantum Core (Neon Violet)</option>
+                            <option value="theme-reactor">Neon Reactor (Emerald Lime)</option>
+                            <option value="theme-fortress">AI Fortress (Electric Blue)</option>
+                        </select>
+                    </div>
+
+                    <!-- Glow Intensity -->
+                    <div class="setting-row">
+                        <label for="select-glow">Neon Glow Intensity</label>
+                        <select id="select-glow" class="custom-select">
+                            <option value="glow-high">High (Full Neon Bloom)</option>
+                            <option value="glow-medium" selected>Medium (Balanced)</option>
+                            <option value="glow-low">Low (Reduced Bloom)</option>
+                        </select>
+                    </div>
+
+                    <!-- Virtual D-Pad -->
+                    <div class="setting-row">
+                        <label for="toggle-touch">Virtual D-Pad</label>
+                        <select id="toggle-touch" class="custom-select">
+                            <option value="auto" selected>Auto-Detect Mobile</option>
+                            <option value="always">Always Visible</option>
+                            <option value="never">Hidden</option>
+                        </select>
+                    </div>
+
+                    <div class="setting-divider"></div>
+
+                    <!-- Danger Zone -->
+                    <div class="setting-row danger-row">
+                        <div>
+                            <strong>Reset Campaign Progress</strong>
+                            <p class="sub-tip">Clear all unlocked levels, stars, and statistics</p>
+                        </div>
+                        <button id="btn-settings-reset" class="btn btn-danger-small">RESET</button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-close-settings" class="btn">SAVE & CLOSE</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. RESET CONFIRMATION MODAL -->
+        <div id="modal-confirm-reset" class="screen hidden confirm-overlay">
+            <div class="screen-modal confirm-modal">
+                <h3 class="glow-pink">Are you sure?</h3>
+                <p class="modal-subtitle">This will permanently clear your unlocked levels, statistics, stars, and saved run.</p>
+                <div class="confirm-actions">
+                    <button id="btn-confirm-cancel" class="btn">CANCEL</button>
+                    <button id="btn-confirm-reset" class="btn btn-danger">RESET PROGRESS</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. PAUSE MENU (Horizontal Action Buttons) -->
+        <div id="screen-pause" class="screen hidden">
+            <div class="screen-modal pause-modal">
+                <h2>PAUSED</h2>
+                <p id="pause-level-info" class="modal-subtitle">Level 1 &middot; Score: 0</p>
+                <div class="pause-actions">
+                    <button id="btn-pause-resume" class="btn btn-primary">RESUME</button>
+                    <button id="btn-pause-restart" class="btn">RESTART LEVEL</button>
+                    <button id="btn-pause-settings" class="btn">SETTINGS</button>
+                    <button id="btn-pause-menu" class="btn btn-danger">MAIN MENU</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 9. LEVEL COMPLETE SCREEN (Horizontal Action Buttons) -->
+        <div id="screen-level-complete" class="screen hidden">
+            <div class="screen-modal complete-modal">
+                <h2 id="complete-title" class="glow-cyan">LEVEL COMPLETE</h2>
+                <div id="complete-stars" class="stars-row">
+                    <span class="star-icon">★</span>
+                    <span class="star-icon">★</span>
+                    <span class="star-icon">★</span>
+                </div>
+                <p id="complete-rating-text" class="rating-text">Master Navigator!</p>
+                
+                <div class="stats-summary-card">
+                    <div class="stat-col">
+                        <span class="stat-num" id="lc-coins">12/12</span>
+                        <span class="stat-lbl">Coins Collected</span>
+                    </div>
+                    <div class="stat-col">
+                        <span class="stat-num" id="lc-time">01:25</span>
+                        <span class="stat-lbl">Time</span>
+                    </div>
+                    <div class="stat-col">
+                        <span class="stat-num" id="lc-lives">3</span>
+                        <span class="stat-lbl">Lives Remaining</span>
+                    </div>
+                    <div class="stat-col">
+                        <span class="stat-num" id="lc-score">+500</span>
+                        <span class="stat-lbl">Bonus Score</span>
+                    </div>
+                </div>
+
+                <div class="complete-actions">
+                    <button id="btn-next-level" class="btn btn-primary">NEXT LEVEL</button>
+                    <button id="btn-replay-level" class="btn">REPLAY</button>
+                    <button id="btn-complete-menu" class="btn">MAIN MENU</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 10. GAME OVER SCREEN (Horizontal Action Buttons) -->
+        <div id="screen-game-over" class="screen hidden">
+            <div class="screen-modal game-over-modal">
+                <h2 class="glow-pink glitch-text">GAME OVER</h2>
+                <p class="modal-subtitle">Your cyber core was destabilized.</p>
+                <div class="stats-summary-card">
+                    <div class="stat-col">
+                        <span class="stat-num" id="go-score">2450</span>
+                        <span class="stat-lbl">Final Score</span>
+                    </div>
+                    <div class="stat-col">
+                        <span class="stat-num" id="go-coins">0</span>
+                        <span class="stat-lbl">Coins Collected</span>
+                    </div>
+                    <div class="stat-col">
+                        <span class="stat-num" id="go-level">6</span>
+                        <span class="stat-lbl">Level Reached</span>
+                    </div>
+                    <div class="stat-col">
+                        <span class="stat-num" id="go-time">01:45</span>
+                        <span class="stat-lbl">Time Survived</span>
+                    </div>
+                </div>
+                <div class="game-over-actions">
+                    <button id="btn-gameover-retry" class="btn btn-primary">RETRY</button>
+                    <button id="btn-gameover-menu" class="btn">MAIN MENU</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 11. VICTORY SCREEN (Level 15 Conquered - Horizontal Action Buttons) -->
+        <div id="screen-victory" class="screen hidden">
+            <div class="screen-modal victory-modal">
+                <h1 class="victory-header glow-cyan">CONGRATULATIONS!</h1>
+                <p class="victory-title">YOU COMPLETED MAZEX!</p>
+                <p class="victory-tag">All 15 levels conquered.</p>
+                
+                <div class="victory-badge">MAZEX GRANDMASTER</div>
+
+                <div class="stats-summary-card victory-stats">
+                    <div class="stat-col">
+                        <span class="stat-num" id="vic-total-score">0</span>
+                        <span class="stat-lbl">Total Score</span>
+                    </div>
+                    <div class="stat-col">
+                        <span class="stat-num" id="vic-total-time">00:00</span>
+                        <span class="stat-lbl">Total Time</span>
+                    </div>
+                    <div class="stat-col">
+                        <span class="stat-num" id="vic-total-coins">0</span>
+                        <span class="stat-lbl">Coins Collected</span>
+                    </div>
+                    <div class="stat-col">
+                        <span class="stat-num" id="vic-total-stars">0/45</span>
+                        <span class="stat-lbl">Stars Earned</span>
+                    </div>
+                </div>
+
+                <div class="victory-actions">
+                    <button id="btn-victory-play-again" class="btn btn-primary">PLAY AGAIN</button>
+                    <button id="btn-victory-levels" class="btn">SELECT LEVEL</button>
+                    <button id="btn-victory-menu" class="btn">MAIN MENU</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Virtual Mobile D-Pad & Controls -->
+        <div id="mobile-controls" class="hidden">
+            <div class="mobile-dpad">
+                <button class="dpad-btn up" id="dpad-up">▲</button>
+                <button class="dpad-btn left" id="dpad-left">◀</button>
+                <button class="dpad-btn right" id="dpad-right">▶</button>
+                <button class="dpad-btn down" id="dpad-down">▼</button>
+            </div>
+            <div class="mobile-actions">
+                <button class="mobile-btn" id="m-btn-hint" title="Hint">💡</button>
+                <button class="mobile-btn" id="m-btn-pause" title="Pause">⏸</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Game Script -->
+    <script src="game.js"></script>
+</body>
+</html>
