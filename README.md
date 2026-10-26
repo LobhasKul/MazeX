@@ -57,15 +57,20 @@ MazeX supports standard keyboards, extended keypad layouts, and mobile touch scr
 
 ## Quick Start / How to Run
 
-### Option 1: Download & Play (Windows PC - No Setup Required)
-1. Download **[MazeX-Windows.zip](MazeX-Windows.zip)** directly from this repository.
-2. Extract the ZIP folder.
-3. Double-click **`MazeX.exe`** to play!
+### Option 1: Single-File Installer & Launcher (.exe) (Easiest — Share this file!)
+1. Download **[MazeX-Setup.exe](MazeX-Setup.exe)** directly from this repository.
+2. Double-click **`MazeX-Setup.exe`**.
+3. It automatically extracts all required libraries (`ffmpeg.dll`, DirectX shaders, game assets), creates a Desktop shortcut, and launches the game instantly! No missing DLL errors possible.
 
-### Option 2: Direct in Browser (No Installation)
+### Option 2: Portable ZIP (Manual Extraction)
+1. Download **[MazeX-Windows.zip](MazeX-Windows.zip)** directly from this repository.
+2. Extract the ZIP folder (**Right-click ➔ Extract All**).
+3. Open the extracted folder and double-click **`MazeX.exe`** to play!
+
+### Option 3: Direct in Browser (No Installation)
 Simply open `index.html` in any modern web browser (Chrome, Edge, Firefox, Brave, Safari).
 
-### Option 3: Local Node.js Server
+### Option 4: Local Node.js Server
 Run the included zero-dependency HTTP server:
 ```bash
 npm start
@@ -75,14 +80,14 @@ Then navigate to:
 http://localhost:3000/
 ```
 
-### Option 3: Desktop App via Electron
-To launch MazeX as a native desktop application:
+### Option 5: Desktop App via Electron
+To launch MazeX in development mode:
 ```bash
 npm install
 npm run app
 ```
 
-### Option 4: Build Windows Executable (.exe)
+### Option 6: Build Windows Executable (.exe)
 ```bash
 npm run build:exe
 ```
