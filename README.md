@@ -57,10 +57,15 @@ MazeX supports standard keyboards, extended keypad layouts, and mobile touch scr
 
 ## Quick Start / How to Run
 
-### Option 1: Direct in Browser (No Installation)
+### Option 1: Download & Play (Windows PC - No Setup Required)
+1. Download **[MazeX-Windows.zip](MazeX-Windows.zip)** directly from this repository.
+2. Extract the ZIP folder.
+3. Double-click **`MazeX.exe`** to play!
+
+### Option 2: Direct in Browser (No Installation)
 Simply open `index.html` in any modern web browser (Chrome, Edge, Firefox, Brave, Safari).
 
-### Option 2: Local Node.js Server
+### Option 3: Local Node.js Server
 Run the included zero-dependency HTTP server:
 ```bash
 npm start
