@@ -2,8 +2,7 @@
 node_modules/
 package-lock.json
 
-# Production / Executable Builds
-dist/
+# Production / Executable Builds (dist un-ignored to track builds)
 out/
 build/
 
