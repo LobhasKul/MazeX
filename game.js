@@ -853,15 +853,7 @@ class ExpressiveEnemy {
         ctx.arc(drawX, drawY, this.radius, 0, Math.PI * 2);
         ctx.fill();
 
-        // Alert Badge
-        if ((this.alertTimer > 0 || this.state === 'alert') && !isFrozen) {
-            ctx.fillStyle = '#ffea00';
-            ctx.shadowColor = '#ffea00';
-            ctx.shadowBlur = 10;
-            ctx.font = 'bold 14px Orbitron';
-            ctx.textAlign = 'center';
-            ctx.fillText('!', drawX, drawY - this.radius - 6);
-        }
+        // Scleras and face features (Alert badge removed per design)
 
         // Eye tracking
         const eyeOffset = this.radius * 0.35;
