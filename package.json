@@ -6,6 +6,10 @@
   "scripts": {
     "start": "node server.js",
     "app": "electron .",
-    "build:exe": "npx @electron/packager . MazeX --platform=win32 --arch=x64 --out=dist --overwrite"
+    "build:exe": "npx @electron/packager . MazeX --platform=win32 --arch=x64 --out=dist --overwrite --electron-version=33.2.0"
+  },
+  "devDependencies": {
+    "@electron/packager": "^18.3.6",
+    "electron": "^33.2.0"
   }
 }
