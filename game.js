@@ -201,54 +201,86 @@ class SoundManager {
         this.playTone(420, 'sine', 0.035, 0.15);
     }
 
-    // Soft Ambient Electronic Music
+    // ================= CYBERPUNK SYNTHWAVE / CHIPTUNE BGM ENGINE =================
     startAmbientMusic() {
-        if (this.musicInterval) clearInterval(this.musicInterval);
+        if (this.musicInterval) {
+            clearInterval(this.musicInterval);
+            this.musicInterval = null;
+        }
+        if (!this.musicEnabled) return;
 
-        const chordRoots = [
-            { root: 110, pad: [220, 261.63, 329.63, 392] },
-            { root: 87.31, pad: [174.61, 220, 261.63, 329.63] },
-            { root: 130.81, pad: [261.63, 329.63, 392, 523.25] },
-            { root: 98, pad: [196, 246.94, 293.66, 392] }
+        // Cyberpunk Synthwave Harmonic Progression: Am -> F -> G -> Em
+        const chordProgression = [
+            // Am (A Minor: Root 55Hz, 5th 82.4Hz, Octave 110Hz, Arp A-C-E-G)
+            { root: 55.0, fifth: 82.41, oct: 110.0, arp: [440.0, 523.25, 659.25, 783.99, 659.25, 523.25, 440.0, 493.88] },
+            // F (F Major: Root 43.65Hz, 5th 65.4Hz, Octave 87.3Hz, Arp F-A-C-F)
+            { root: 43.65, fifth: 65.41, oct: 87.31, arp: [349.23, 440.0, 523.25, 698.46, 523.25, 440.0, 392.0, 440.0] },
+            // G (G Major: Root 49Hz, 5th 73.4Hz, Octave 98Hz, Arp G-B-D-G)
+            { root: 49.00, fifth: 73.42, oct: 98.00, arp: [392.0, 493.88, 587.33, 783.99, 587.33, 493.88, 440.0, 493.88] },
+            // Em (E Minor: Root 41.2Hz, 5th 61.7Hz, Octave 82.4Hz, Arp E-G-B-E)
+            { root: 41.20, fifth: 61.74, oct: 82.41, arp: [329.63, 392.0, 493.88, 659.25, 493.88, 392.0, 329.63, 392.0] }
         ];
+
+        this.musicStep = 0;
+        const stepTime = 0.122; // ~123 BPM 16th-note pulse
 
         this.musicInterval = setInterval(() => {
             if (!this.musicEnabled || !this.ctx || this.ctx.state !== 'running') return;
             const effective = this.getMusicEffectiveVolume();
             if (effective <= 0.001) return;
 
-            const chordIdx = Math.floor(this.musicStep / 8) % chordRoots.length;
-            const currentChord = chordRoots[chordIdx];
+            const totalSteps = 64; // 4 bars × 16 steps
+            const currentStep = this.musicStep % totalSteps;
+            const chordIdx = Math.floor(currentStep / 16) % chordProgression.length;
+            const chord = chordProgression[chordIdx];
+            const stepInBar = currentStep % 16;
 
-            if (this.musicStep % 2 === 0) {
-                this.playPadTone(currentChord.root, 'sine', 1.2, 0.5);
+            // 1. Low-Frequency Cyber Synth Bass Arpeggio (Filtered resonant saw bass pulse)
+            if (stepInBar % 2 === 0) {
+                let bassFreq = chord.root;
+                if (stepInBar === 6 || stepInBar === 14) bassFreq = chord.oct;
+                else if (stepInBar === 10) bassFreq = chord.fifth;
+                this.playSynthBass(bassFreq, stepTime * 1.4, 0.38);
             }
 
-            if (this.musicStep % 4 === 1) {
-                const note = currentChord.pad[Math.floor(Math.random() * currentChord.pad.length)];
-                this.playPadTone(note, 'triangle', 1.8, 0.25);
+            // 2. Retro Chiptune Arp Melodic Accent (Triangle wave cyber arpeggiator)
+            const arpIndex = stepInBar % 8;
+            const arpFreq = chord.arp[arpIndex];
+            if (stepInBar % 2 === 0 || stepInBar === 3 || stepInBar === 7 || stepInBar === 11 || stepInBar === 15) {
+                this.playChiptuneArp(arpFreq, stepTime * 1.15, 0.18);
+            }
+
+            // 3. Subtle Cyber Percussion (Electro kick & hat pulse)
+            if (stepInBar === 0 || stepInBar === 8) {
+                this.playCyberKick(stepTime * 1.6, 0.32);
+            } else if (stepInBar === 4 || stepInBar === 12) {
+                this.playCyberSnare(stepTime * 1.1, 0.20);
+            } else if (stepInBar % 2 === 1) {
+                this.playCyberHat(0.035, 0.10);
             }
 
             this.musicStep++;
-        }, 420);
+        }, 122);
     }
 
-    playPadTone(freq, type = 'sine', duration = 1.0, gainScale = 0.3) {
+    playSynthBass(freq, duration = 0.18, gainScale = 0.35) {
         if (!this.ctx || !this.musicGain) return;
         try {
             const now = this.ctx.currentTime;
             const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
             const filter = this.ctx.createBiquadFilter();
+            const gain = this.ctx.createGain();
 
-            osc.type = type;
+            osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(freq, now);
 
             filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(450, now);
+            filter.Q.setValueAtTime(3.5, now);
+            filter.frequency.setValueAtTime(420, now);
+            filter.frequency.exponentialRampToValueAtTime(110, now + duration * 0.9);
 
             gain.gain.setValueAtTime(0.001, now);
-            gain.gain.linearRampToValueAtTime(gainScale, now + duration * 0.4);
+            gain.gain.linearRampToValueAtTime(gainScale, now + 0.012);
             gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
 
             osc.connect(filter);
@@ -258,6 +290,134 @@ class SoundManager {
             osc.start(now);
             osc.stop(now + duration);
         } catch (e) {}
+    }
+
+    playChiptuneArp(freq, duration = 0.14, gainScale = 0.18) {
+        if (!this.ctx || !this.musicGain) return;
+        try {
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const filter = this.ctx.createBiquadFilter();
+            const gain = this.ctx.createGain();
+
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, now);
+
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(1600, now);
+
+            gain.gain.setValueAtTime(0.001, now);
+            gain.gain.linearRampToValueAtTime(gainScale, now + 0.01);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(this.musicGain);
+
+            osc.start(now);
+            osc.stop(now + duration);
+        } catch (e) {}
+    }
+
+    playCyberKick(duration = 0.16, gainScale = 0.3) {
+        if (!this.ctx || !this.musicGain) return;
+        try {
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(95, now);
+            osc.frequency.exponentialRampToValueAtTime(32, now + duration);
+
+            gain.gain.setValueAtTime(gainScale, now);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+            osc.connect(gain);
+            gain.connect(this.musicGain);
+
+            osc.start(now);
+            osc.stop(now + duration);
+        } catch (e) {}
+    }
+
+    playCyberSnare(duration = 0.1, gainScale = 0.2) {
+        if (!this.ctx || !this.musicGain) return;
+        try {
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const oscGain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(180, now);
+            osc.frequency.exponentialRampToValueAtTime(70, now + duration * 0.6);
+            oscGain.gain.setValueAtTime(gainScale * 0.5, now);
+            oscGain.gain.exponentialRampToValueAtTime(0.0001, now + duration * 0.6);
+            osc.connect(oscGain);
+            oscGain.connect(this.musicGain);
+            osc.start(now);
+            osc.stop(now + duration * 0.6);
+
+            const bufferSize = Math.max(1, Math.floor(this.ctx.sampleRate * duration));
+            const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+            const noise = this.ctx.createBufferSource();
+            noise.buffer = buffer;
+            const filter = this.ctx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(1400, now);
+            filter.Q.setValueAtTime(1.5, now);
+
+            const nGain = this.ctx.createGain();
+            nGain.gain.setValueAtTime(gainScale * 0.7, now);
+            nGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+            noise.connect(filter);
+            filter.connect(nGain);
+            nGain.connect(this.musicGain);
+
+            noise.start(now);
+        } catch (e) {}
+    }
+
+    playCyberHat(duration = 0.035, gainScale = 0.10) {
+        if (!this.ctx || !this.musicGain) return;
+        try {
+            const now = this.ctx.currentTime;
+            const bufferSize = Math.max(1, Math.floor(this.ctx.sampleRate * duration));
+            const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+            const noise = this.ctx.createBufferSource();
+            noise.buffer = buffer;
+            const filter = this.ctx.createBiquadFilter();
+            filter.type = 'highpass';
+            filter.frequency.setValueAtTime(5500, now);
+
+            const gain = this.ctx.createGain();
+            gain.gain.setValueAtTime(gainScale, now);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+            noise.connect(filter);
+            filter.connect(gain);
+            gain.connect(this.musicGain);
+
+            noise.start(now);
+        } catch (e) {}
+    }
+
+    pauseMusic() {
+        if (this.musicGain && this.ctx) {
+            this.musicGain.gain.setValueAtTime(this.getMusicEffectiveVolume() * 0.35, this.ctx.currentTime);
+        }
+    }
+
+    resumeMusic() {
+        if (this.musicGain && this.ctx) {
+            this.musicGain.gain.setValueAtTime(this.getMusicEffectiveVolume(), this.ctx.currentTime);
+        }
     }
 
     stopAmbientMusic() {
@@ -2854,12 +3014,14 @@ class MazeXGame {
     pauseGame() {
         if (this.gameState !== 'PLAYING') return;
         this.gameState = 'PAUSED';
+        sound.pauseMusic();
         document.getElementById('pause-level-info').innerText = `Level ${this.currentLevelIdx + 1} &middot; Score: ${this.score}`;
         this.showScreen('pause');
     }
 
     resumeGame() {
         if (this.gameState !== 'PAUSED') return;
+        sound.resumeMusic();
         this.showScreen('hud');
         this.gameState = 'PLAYING';
     }
