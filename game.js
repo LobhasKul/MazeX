@@ -3148,7 +3148,17 @@ class MazeXGame {
         document.getElementById('lc-coins').innerText = `${this.collectedCoins}/${this.requiredCoins}`;
         document.getElementById('lc-time').innerText = timeStr;
         document.getElementById('lc-lives').innerText = `${this.lives}`;
-        document.getElementById('lc-score').innerText = completionBonus > 0 ? `+${completionBonus}` : `0`;
+        
+        // Hide Bonus Score box if no bonus is awarded (e.g. non-milestone levels or replayed levels)
+        const scoreCol = document.getElementById('lc-score-col');
+        if (scoreCol) {
+            if (completionBonus > 0) {
+                scoreCol.classList.remove('hidden');
+                document.getElementById('lc-score').innerText = `+${completionBonus}`;
+            } else {
+                scoreCol.classList.add('hidden');
+            }
+        }
 
         // Dynamic Next Level button text
         const btnNextLevel = document.getElementById('btn-next-level');
