@@ -1037,6 +1037,8 @@ class ExpressiveEnemy {
     constructor(c, r, type, level, cellSize, offsetX, offsetY) {
         this.c = c;
         this.r = r;
+        this.spawnC = c;
+        this.spawnR = r;
         this.targetC = c;
         this.targetR = r;
         this.x = offsetX + c * cellSize + cellSize / 2;
@@ -1094,7 +1096,7 @@ class ExpressiveEnemy {
         this.retargetTimer = Math.floor(Math.random() * 180) + 240; // 4 to 7 seconds
     }
 
-    defeat(durationFrames = 120) {
+    defeat(durationFrames = 180) {
         this.defeatedTimer = durationFrames;
         this.state = 'defeated';
         this.burstActive = false;
@@ -1107,6 +1109,10 @@ class ExpressiveEnemy {
             this.state = 'defeated';
             if (this.defeatedTimer === 0) {
                 this.state = 'normal';
+                if (game && game.effects) {
+                    game.effects.addBurst(this.x, this.y, '#ff007f', 20);
+                    game.effects.addFloatText(this.x, this.y - 15, 'RESPAWNED', '#ff007f');
+                }
             }
             return;
         }
@@ -2805,10 +2811,20 @@ class MazeXGame {
         this.effects.addBurst(enemy.x, enemy.y, '#00ffcc', 25);
         this.effects.addFloatText(enemy.x, enemy.y - 15, '+150 KILL', '#ff0055');
 
-        this.showToast(`Sentinel destroyed via ${reason}! (${this.enemiesKilledThisLevel}/${this.maxEnemyKills} enemies killed)`);
+        this.showToast(`Sentinel destroyed via ${reason}! Respawning in 3s... (${this.enemiesKilledThisLevel}/${this.maxEnemyKills})`);
 
-        // Permanently eliminate from array so it never comes back
-        this.enemies.splice(enemyIndex, 1);
+        // Reset enemy position back to spawn and vanish for 3 seconds (180 frames @ 60 FPS)
+        const respawnC = enemy.spawnC !== undefined ? enemy.spawnC : enemy.c;
+        const respawnR = enemy.spawnR !== undefined ? enemy.spawnR : enemy.r;
+        enemy.c = respawnC;
+        enemy.r = respawnR;
+        enemy.targetC = respawnC;
+        enemy.targetR = respawnR;
+        enemy.x = this.offsetX + respawnC * this.cellSize + this.cellSize / 2;
+        enemy.y = this.offsetY + respawnR * this.cellSize + this.cellSize / 2;
+        enemy.dir = { x: 0, y: 0 };
+        enemy.defeat(180); // Exact 3-second respawn timer
+
         this.updateHUD();
     }
 
@@ -2825,8 +2841,9 @@ class MazeXGame {
             return;
         }
 
-        if (!this.player || this.enemies.length === 0) {
-            this.showToast("All hostiles already eliminated in this sector!");
+        const activeEnemies = this.enemies.filter(e => e.defeatedTimer <= 0);
+        if (activeEnemies.length === 0) {
+            this.showToast("Hostiles currently respawning! Wait for them to return.");
             return;
         }
 
@@ -2887,7 +2904,7 @@ class MazeXGame {
                 this.effects.addBurst(this.player.x, this.player.y, '#00ffcc', 20);
                 this.effects.addFloatText(this.player.x, this.player.y - 15, 'SANCTUARY DEFLECT', '#00ffcc');
                 this.showToast("Safe Zone deflected hostile attack.");
-                enemy.defeat(90);
+                enemy.defeat(180);
                 this.updateHUD();
                 return;
             }
@@ -2913,7 +2930,7 @@ class MazeXGame {
                     sound.playAchievement();
                 }
 
-                enemy.defeat(120);
+                enemy.defeat(180);
                 this.effects.addBurst(enemy.x, enemy.y, '#00bfff', 24);
                 this.updateHUD();
                 return;
@@ -2943,8 +2960,8 @@ class MazeXGame {
             this.showToast(`Hostile strike: -25 HP (Health: ${Math.max(0, this.health)}%)`);
         }
 
-        // Enemy vanishes for 2 seconds then comes back
-        enemy.defeat(120);
+        // Enemy vanishes for 3 seconds then comes back
+        enemy.defeat(180);
         this.effects.addBurst(enemy.x, enemy.y, '#ff0055', 24);
 
         if (this.health <= 0) {
