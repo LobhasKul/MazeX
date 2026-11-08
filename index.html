@@ -127,9 +127,9 @@
                         <h4 class="guide-title">Controls</h4>
                         <div class="guide-pills">
                             <span class="pill"><kbd>Arrows</kbd> / <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / <kbd>Home</kbd><kbd>End</kbd><kbd>PgUp</kbd><kbd>PgDn</kbd> / <kbd>Numpad</kbd> — Move</span>
-                            <span class="pill"><kbd>SPACE</kbd> — Cyber Strike (Kill up to 3 enemies in Levels 12–15)</span>
+                            <span class="pill"><kbd>SPACE</kbd> — Cyber Strike (Kill up to 3 enemies in sectors with 3+ sentinels)</span>
                             <span class="pill"><kbd>H</kbd> — Navigation Hint (5 Hints Per Level)</span>
-                            <span class="pill"><kbd>B</kbd> — Tactical Powers Arsenal (Levels 13–15)</span>
+                            <span class="pill"><kbd>B</kbd> — Tactical Powers Arsenal (Levels 8–15)</span>
                             <span class="pill"><kbd>P</kbd> / <kbd>ESC</kbd> — Pause Game</span>
                         </div>
                     </div>
@@ -137,7 +137,7 @@
                     <div class="guide-block">
                         <h4 class="guide-title">Enemies &amp; Combat</h4>
                         <ul class="guide-list">
-                            <li><strong>Enemy Elimination (Levels 12–15)</strong> — You can permanently kill enemies 2 to 3 times per sector on your way to the exit portal! Destroy them using Cyber Strike (<kbd>SPACE</kbd>), by running into frozen enemies (Cryo Shatter), via Aegis Shield deflection, or Safe Zone defense.</li>
+                            <li><strong>Enemy Elimination (3+ Enemies Sectors)</strong> — In sectors with 3 or more sentinels (Levels 8–15), you can eliminate enemies 2 to 3 times per sector on your way to the exit portal! Destroy them using Cyber Strike (<kbd>SPACE</kbd>), by running into frozen enemies (Cryo Shatter), via Aegis Shield deflection, or Safe Zone defense. Defeated hostiles respawn back at their spawn points in 3 seconds.</li>
                             <li><strong>Collision Damage</strong> — Touching an active pink enemy inflicts 25 damage. If health drops to zero, 1 Life is lost. When a life is lost, health restores to 100%.</li>
                             <li><strong>Max 4 Pink Enemies</strong> — Difficulty scales progressively from simpler to harder, strictly capped at a maximum of 4 pink enemies in any sector.</li>
                             <li><strong>Safe Zones (Levels 11–15)</strong> — Advanced sectors feature glowing cyan Safe Zones. Enemies cannot enter or attack you while inside!</li>
@@ -413,7 +413,7 @@
                         <span class="stat-num" id="lc-lives">3</span>
                         <span class="stat-lbl">Lives Remaining</span>
                     </div>
-                    <div class="stat-col" id="lc-score-col">
+                    <div class="stat-col hidden" id="lc-score-col" style="display: none;">
                         <span class="stat-num" id="lc-score">+500</span>
                         <span class="stat-lbl">Bonus Score</span>
                     </div>

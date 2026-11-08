@@ -1909,10 +1909,11 @@ class MazeXGame {
                 this.triggerCyberStrike();
             }
 
-            // Open Tactical Powers Arsenal on B key for Advanced Sectors (13, 14, 15)
+            // Open Tactical Powers Arsenal on B key for sectors with 3 or more sentinels (Levels 8–15)
             if (e.code === 'KeyB' || e.key === 'b' || e.key === 'B') {
                 const cfg = LEVELS_CONFIG[this.currentLevelIdx];
-                if (cfg && cfg.id >= 13) {
+                const has3PlusEnemies = cfg && ((cfg.enemies && cfg.enemies.length >= 3) || cfg.id >= 8);
+                if (has3PlusEnemies) {
                     this.showTacticalPowersModal();
                 }
             }
@@ -2438,15 +2439,17 @@ class MazeXGame {
         this.activeProtection = null;
         this.isPowersModalOpen = false;
 
-        // Enemy Kill Quota for Levels 12 onwards (up to 3 kills allowed per sector until reaching goal)
+        // Enemy Kill Quota for sectors with 3 or more enemies (Levels 8–15)
+        // Up to 3 kills allowed per sector until reaching goal
+        const has3PlusEnemies = (cfg.enemies && cfg.enemies.length >= 3) || cfg.id >= 8;
         this.enemiesKilledThisLevel = 0;
-        this.maxEnemyKills = (cfg.id >= 12) ? 3 : 0;
+        this.maxEnemyKills = has3PlusEnemies ? 3 : 0;
 
-        // Tactical Defense Score Budget for Advanced Sectors (Levels 13, 14, 15)
+        // Tactical Defense Score Budget for sectors with 3+ sentinels (Levels 8–15)
         // Ensures the player has available score to equip cyber protection
-        if (cfg.id >= 13) {
-            const minTacticalBudgets = { 13: 350, 14: 450, 15: 600 };
-            const requiredMin = minTacticalBudgets[cfg.id] || 350;
+        if (has3PlusEnemies) {
+            const minTacticalBudgets = { 8: 200, 9: 250, 10: 300, 11: 350, 12: 350, 13: 400, 14: 450, 15: 600 };
+            const requiredMin = minTacticalBudgets[cfg.id] || 250;
             if (!this.score || this.score < requiredMin) {
                 this.score = requiredMin;
             }
@@ -2599,10 +2602,11 @@ class MazeXGame {
         // Save session for Continue (Fresh 3 lives and 100 health per level)
         ProgressManager.saveSession(this.currentLevelIdx, this.score, 3, 100, this.claimedBonusLevels);
 
-        // Tactical powers button visibility for advanced sectors (Levels 13, 14, 15)
+        // Tactical powers button visibility for sectors with 3 or more sentinels (Levels 8+)
         const powersBtn = document.getElementById('btn-hud-powers');
         if (powersBtn) {
-            if (cfg.id >= 13) {
+            const has3PlusEnemies = (cfg.enemies && cfg.enemies.length >= 3) || cfg.id >= 8;
+            if (has3PlusEnemies) {
                 powersBtn.classList.remove('hidden');
             } else {
                 powersBtn.classList.add('hidden');
@@ -2621,8 +2625,8 @@ class MazeXGame {
         }
         window.focus();
 
-        // For advanced sectors 13, 14, 15, open the tactical defense arsenal
-        if (cfg.id >= 13) {
+        // For sectors with 3+ sentinels (Levels 8–15), open the tactical defense arsenal
+        if (has3PlusEnemies) {
             setTimeout(() => {
                 if (this.currentLevelIdx === idx && this.gameState === 'PLAYING') {
                     this.showTacticalPowersModal();
@@ -2814,14 +2818,38 @@ class MazeXGame {
         this.showToast(`Sentinel destroyed via ${reason}! Respawning in 3s... (${this.enemiesKilledThisLevel}/${this.maxEnemyKills})`);
 
         // Reset enemy position back to spawn and vanish for 3 seconds (180 frames @ 60 FPS)
-        const respawnC = enemy.spawnC !== undefined ? enemy.spawnC : enemy.c;
-        const respawnR = enemy.spawnR !== undefined ? enemy.spawnR : enemy.r;
+        let respawnC = enemy.spawnC !== undefined ? enemy.spawnC : enemy.c;
+        let respawnR = enemy.spawnR !== undefined ? enemy.spawnR : enemy.r;
+
+        // If spawn point is too close to player's current position, find a safe corridor far from player
+        if (this.player && Math.hypot(this.player.c - respawnC, this.player.r - respawnR) < 4) {
+            let bestDist = 0;
+            let bestC = respawnC;
+            let bestR = respawnR;
+            for (let tries = 0; tries < 20; tries++) {
+                const tc = Math.floor(Math.random() * (this.cols - 2)) + 1;
+                const tr = Math.floor(Math.random() * (this.rows - 2)) + 1;
+                if (this.isSafeZone(tc, tr)) continue;
+                const d = Math.hypot(this.player.c - tc, this.player.r - tr);
+                if (d > bestDist) {
+                    bestDist = d;
+                    bestC = tc;
+                    bestR = tr;
+                }
+            }
+            respawnC = bestC;
+            respawnR = bestR;
+        }
+
         enemy.c = respawnC;
         enemy.r = respawnR;
         enemy.targetC = respawnC;
         enemy.targetR = respawnR;
         enemy.x = this.offsetX + respawnC * this.cellSize + this.cellSize / 2;
         enemy.y = this.offsetY + respawnR * this.cellSize + this.cellSize / 2;
+        enemy.roamTargetC = null;
+        enemy.roamTargetR = null;
+        enemy.retargetTimer = 0;
         enemy.dir = { x: 0, y: 0 };
         enemy.defeat(180); // Exact 3-second respawn timer
 
@@ -2831,8 +2859,9 @@ class MazeXGame {
     triggerCyberStrike() {
         if (this.gameState !== 'PLAYING') return;
         const cfg = LEVELS_CONFIG[this.currentLevelIdx] || {};
-        if (cfg.id < 12) {
-            this.showToast("Cyber Strike unlocked for Level 12 onwards.");
+        const has3PlusEnemies = (cfg.enemies && cfg.enemies.length >= 3) || cfg.id >= 8;
+        if (!has3PlusEnemies) {
+            this.showToast("Cyber Strike unlocked for sectors with 3 or more sentinels (Levels 8+).");
             return;
         }
 
@@ -2874,8 +2903,8 @@ class MazeXGame {
 
     handleEnemyCollision(enemy, enemyIndex = -1) {
         const cfg = LEVELS_CONFIG[this.currentLevelIdx] || {};
-        const isLevel12Plus = cfg.id >= 12;
-        const canKill = isLevel12Plus && (this.enemiesKilledThisLevel < this.maxEnemyKills);
+        const has3PlusEnemies = (cfg.enemies && cfg.enemies.length >= 3) || cfg.id >= 8;
+        const canKill = has3PlusEnemies && (this.enemiesKilledThisLevel < this.maxEnemyKills);
 
         // 1. Frozen Enemy (Cryo Freeze): Running into frozen sentinels shatters them!
         if (this.activeEffects.freeze > 0) {
@@ -3171,9 +3200,11 @@ class MazeXGame {
         if (scoreCol) {
             if (completionBonus > 0) {
                 scoreCol.classList.remove('hidden');
+                scoreCol.style.display = 'flex';
                 document.getElementById('lc-score').innerText = `+${completionBonus}`;
             } else {
                 scoreCol.classList.add('hidden');
+                scoreCol.style.display = 'none';
             }
         }
 
