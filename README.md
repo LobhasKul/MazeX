@@ -12,10 +12,14 @@
 
 ---
 
-## 🎮 Play Online
+## 🎮 Play Online & Downloads
 
-Play immediately in your web browser with zero installation:  
-👉 **[https://lobhaskul.github.io/MazeX/](https://lobhaskul.github.io/MazeX/)**
+| Platform / Method | Link / Action | Description |
+| :--- | :--- | :--- |
+| **Web Browser (Instant)** | 🌐 **[Play Online (GitHub Pages)](https://lobhaskul.github.io/MazeX/)** | Zero installation — play in Chrome, Edge, Safari, Firefox |
+| **Windows Installer (.exe)** | 📥 **[Download MazeX-Setup.exe](https://github.com/LobhasKul/MazeX/raw/main/MazeX-Setup.exe)** | Single-file setup; auto-creates Desktop & Start Menu shortcuts |
+| **Windows Portable (.zip)** | 📦 **[Download MazeX-Windows.zip](https://github.com/LobhasKul/MazeX/raw/main/MazeX-Windows.zip)** | Portable version — extract ZIP and run `MazeX.exe` directly |
+| **GitHub File Viewer** | 📁 **[Browse MazeX-Setup.exe on GitHub](https://github.com/LobhasKul/MazeX/blob/main/MazeX-Setup.exe)** | View file details and click "Download raw file" on GitHub |
 
 ---
 
@@ -90,14 +94,21 @@ MazeX supports keyboards, numpads, and touch screens:
 Open **[https://lobhaskul.github.io/MazeX/](https://lobhaskul.github.io/MazeX/)** in any modern web browser (Chrome, Edge, Firefox, Brave, Safari, Mobile).
 
 ### Option 2: Single-File Setup Installer (.exe) (Recommended for Windows)
-1. Download **[MazeX-Setup.exe](MazeX-Setup.exe)** directly from this repository.
-2. Double-click **`MazeX-Setup.exe`**.
-3. It installs with a cyberpunk animated progress bar, creates a Desktop shortcut, and launches the game immediately.
+1. **Download the installer directly**:
+   - Direct link: 📥 **[Download MazeX-Setup.exe](https://github.com/LobhasKul/MazeX/raw/main/MazeX-Setup.exe)** *(or click on `MazeX-Setup.exe` in the repository root and click **Download raw file**)*.
+2. **Run the Installer**:
+   - Double-click **`MazeX-Setup.exe`**.
+   - A cyberpunk setup window with an animated progress bar will appear.
+   - It automatically extracts all runtime binaries, creates a **Desktop shortcut** and **Start Menu shortcut**, and launches the game immediately.
+3. *(Optional Note)*: If Windows SmartScreen displays a *"Windows protected your PC"* notification (standard for newly released indie `.exe` files), click **More info** ➔ **Run anyway**.
 
 ### Option 3: Portable ZIP (No Installation Required)
-1. Download **[MazeX-Windows.zip](MazeX-Windows.zip)**.
-2. Extract the ZIP folder (**Right-click ➔ Extract All**).
-3. Double-click **`MazeX.exe`** to play right away.
+1. **Download the portable package**:
+   - Direct link: 📦 **[Download MazeX-Windows.zip](https://github.com/LobhasKul/MazeX/raw/main/MazeX-Windows.zip)**.
+2. **Extract**:
+   - Right-click `MazeX-Windows.zip` ➔ **Extract All**.
+3. **Play**:
+   - Open the extracted folder and double-click **`MazeX.exe`** to play instantly.
 
 ### Option 4: Local Node.js Development Server
 ```bash
