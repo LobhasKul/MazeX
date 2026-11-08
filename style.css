@@ -285,21 +285,24 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
+    min-height: 40px;
 }
 
-/* MISSION TEXT (Clean, No Icon) */
+/* MISSION TEXT (Clean, Sleek Pill) */
 .mission-wrapper {
     display: flex;
     align-items: center;
-    background: rgba(0, 245, 212, 0.06);
+    background: rgba(0, 245, 212, 0.08);
     border: 1px solid var(--border-dim);
-    padding: 4px 12px;
-    border-radius: 14px;
-    font-size: 0.92rem;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.84rem;
     font-weight: 600;
     color: var(--text-main);
-    letter-spacing: 0.5px;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .mission-wrapper.portal-ready {
@@ -315,70 +318,216 @@ body {
     to { transform: scale(1.02); }
 }
 
-.powerup-timers {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex: 1;
-    justify-content: center;
-}
-
-.powerup-badge {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-size: 0.8rem;
-    font-family: 'Orbitron', sans-serif;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-}
-
-.powerup-badge.speed {
-    background: rgba(112, 224, 0, 0.15);
-    border: 1px solid var(--accent-speed);
-    color: var(--accent-speed);
-}
-
-.powerup-badge.shield {
-    background: rgba(0, 180, 216, 0.15);
-    border: 1px solid var(--accent-shield);
-    color: var(--accent-shield);
-}
-
-.powerup-badge.freeze {
-    background: rgba(0, 240, 255, 0.15);
-    border: 1px solid var(--accent-freeze);
-    color: var(--accent-freeze);
-}
-
 .hud-buttons {
     display: flex;
+    align-items: center;
     gap: 8px;
 }
 
 .hud-btn {
+    height: 30px;
+    min-width: 84px;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px;
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid var(--border-dim);
     color: var(--primary-cyan);
     font-family: 'Orbitron', sans-serif;
     font-size: 0.78rem;
     font-weight: 700;
-    padding: 4px 10px;
+    line-height: 1;
     border-radius: 6px;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    transition: all 0.2s ease;
     white-space: nowrap;
+    transition: all 0.2s ease;
 }
 
 .hud-btn:hover {
     background: rgba(0, 245, 212, 0.15);
     border-color: var(--primary-cyan);
     box-shadow: 0 0 10px var(--primary-glow);
+}
+
+.hud-btn.powers-btn {
+    color: var(--accent-gold);
+    border-color: rgba(255, 215, 0, 0.35);
+    background: rgba(255, 215, 0, 0.04);
+}
+
+.hud-btn.powers-btn:hover {
+    background: rgba(255, 215, 0, 0.15);
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+    color: #fff;
+}
+
+/* TACTICAL CYBER DEFENSE ARSENAL MODAL (Levels 13, 14, 15) */
+.tactical-powers-modal {
+    max-width: 680px;
+    width: 95%;
+}
+
+.powers-score-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0, 255, 204, 0.08);
+    border: 1px solid rgba(0, 255, 204, 0.3);
+    border-radius: 8px;
+    padding: 10px 18px;
+    margin: 12px 0 16px 0;
+}
+
+.score-banner-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+}
+
+.score-banner-sub {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    letter-spacing: 0.3px;
+    margin-top: 3px;
+}
+
+.score-banner-val {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.35rem;
+    font-weight: 900;
+    color: #ffd700;
+    text-shadow: 0 0 12px rgba(255, 215, 0, 0.5);
+}
+
+.powers-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 640px) {
+    .powers-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.power-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-dim);
+    border-radius: 10px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: all 0.25s ease;
+    position: relative;
+}
+
+.power-card:hover {
+    border-color: rgba(0, 255, 204, 0.5);
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
+}
+
+.power-card.equipped {
+    border-color: #00ffcc;
+    background: rgba(0, 255, 204, 0.1);
+    box-shadow: 0 0 16px rgba(0, 255, 204, 0.35);
+}
+
+.power-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.power-card-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.power-card-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.5px;
+}
+
+.power-card-desc {
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: var(--text-muted);
+    flex: 1;
+}
+
+.power-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.power-cost-tag {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #ffd700;
+    letter-spacing: 0.5px;
+}
+
+.btn-power-select {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.74rem;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--primary-cyan);
+    background: rgba(0, 255, 204, 0.12);
+    color: var(--primary-cyan);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-power-select:hover:not(:disabled) {
+    background: var(--primary-cyan);
+    color: #000;
+    box-shadow: 0 0 10px var(--primary-glow);
+}
+
+.btn-power-select:disabled {
+    opacity: 0.45;
+    border-color: var(--border-dim);
+    color: var(--text-muted);
+    cursor: not-allowed;
+}
+
+.power-card.equipped .btn-power-select {
+    background: #00ffcc;
+    color: #000;
+    border-color: #00ffcc;
+    box-shadow: 0 0 10px rgba(0, 255, 204, 0.4);
+}
+
+.powers-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.btn-deploy-hero {
+    font-size: 0.95rem;
+    font-weight: 900;
+    padding: 10px 24px;
+    letter-spacing: 1px;
 }
 
 .hint-btn {
@@ -413,6 +562,7 @@ canvas {
     display: block;
     width: 100%;
     height: 100%;
+    outline: none;
 }
 
 #confettiCanvas {

@@ -137,6 +137,17 @@ class SoundManager {
         this.playTone(600, 'triangle', 0.18, 0.35, 1200);
     }
 
+    playEnemyKill() {
+        this.playNoise(0.28, 0.45);
+        this.playTone(320, 'sawtooth', 0.22, 0.35, 80);
+        setTimeout(() => this.playTone(880, 'sine', 0.18, 0.3, 1400), 50);
+    }
+
+    playSafeZoneEnter() {
+        this.playTone(523.25, 'sine', 0.12, 0.22, 659.25);
+        setTimeout(() => this.playTone(783.99, 'sine', 0.16, 0.2, 1046.5), 60);
+    }
+
     playHit() {
         this.playNoise(0.25, 0.45);
         this.playTone(160, 'sawtooth', 0.18, 0.35, 50);
@@ -346,8 +357,8 @@ class ProgressManager {
             return null;
         }
     }
-    static saveSession(levelIdx, score, lives, health) {
-        const session = { levelIdx, score, lives, health, timestamp: Date.now() };
+    static saveSession(levelIdx, score, lives, health, claimedBonusLevels = []) {
+        const session = { levelIdx, score, lives, health, claimedBonusLevels, timestamp: Date.now() };
         localStorage.setItem('mazex_saved_session', JSON.stringify(session));
     }
     static clearSavedSession() {
@@ -400,23 +411,55 @@ const ACHIEVEMENTS_DEF = [
     { key: 'grand_champion', title: 'Grand Champion', desc: 'Conquer all 15 campaign sectors.', icon: '★' }
 ];
 
+// ================= TACTICAL POWERS FOR ADVANCED SECTORS (Levels 13, 14, 15) =================
+const TACTICAL_POWERS_DEF = [
+    {
+        id: 'shield',
+        title: 'Aegis Forcefield',
+        icon: '🛡️',
+        cost: 80,
+        desc: 'Deploys an energetic defensive shield that fully absorbs an enemy strike and deflects the attacker safely with zero damage.'
+    },
+    {
+        id: 'freeze',
+        title: 'Chrono Cryo Stasis',
+        icon: '❄️',
+        cost: 140,
+        desc: 'Emits a sub-zero stasis burst immobilizing all hostile pink sentinels for 20 seconds, creating safe paths.'
+    },
+    {
+        id: 'armor',
+        title: 'Nanite Composite Armor',
+        icon: '⚙️',
+        cost: 200,
+        desc: 'Nanite cyberweave reduces all incoming collision damage by 50% (only 12 HP lost) and extends post-hit invulnerability.'
+    },
+    {
+        id: 'bubble',
+        title: 'Portable Sanctuary Bubble',
+        icon: '💠',
+        cost: 280,
+        desc: 'Surrounds the player with a mobile Safe Zone aura for 15 seconds. Enemies are repelled and cannot inflict damage anywhere!'
+    }
+];
+
 // ================= 15 LEVEL CONFIGURATIONS =================
 const LEVELS_CONFIG = [
     { id: 1, name: "First Steps", diff: "Very Easy", cols: 13, rows: 9, coins: 8, gems: 0, powerups: [], enemies: [], hints: 5, targetTime: 25 },
     { id: 2, name: "The Awakening", diff: "Easy", cols: 15, rows: 11, coins: 12, gems: 0, powerups: [], enemies: [{ type: 'patrol' }], hints: 5, targetTime: 32 },
-    { id: 3, name: "The Neon Hunt", diff: "Easy", cols: 17, rows: 11, coins: 14, gems: 1, powerups: [], enemies: [{ type: 'hunter' }], hints: 4, targetTime: 36 },
-    { id: 4, name: "Split Circuits", diff: "Easy-Medium", cols: 17, rows: 13, coins: 16, gems: 1, powerups: [], enemies: [{ type: 'hunter' }], hints: 4, targetTime: 40 },
-    { id: 5, name: "Dual Threat", diff: "Medium", cols: 19, rows: 13, coins: 18, gems: 2, powerups: [], enemies: [{ type: 'hunter' }, { type: 'patrol' }], hints: 3, targetTime: 45 },
-    { id: 6, name: "Overdrive", diff: "Medium", cols: 19, rows: 13, coins: 20, gems: 2, powerups: ['speed'], enemies: [{ type: 'hunter' }, { type: 'ambusher' }], hints: 3, targetTime: 48 },
-    { id: 7, name: "Branching Paths", diff: "Medium-Hard", cols: 21, rows: 15, coins: 22, gems: 3, powerups: ['speed'], enemies: [{ type: 'hunter' }, { type: 'ambusher' }], hints: 3, targetTime: 52 },
-    { id: 8, name: "Cyber Defense", diff: "Hard", cols: 21, rows: 15, coins: 24, gems: 3, powerups: ['shield', 'speed'], enemies: [{ type: 'hunter' }, { type: 'ambusher' }, { type: 'trapper' }], hints: 3, targetTime: 58 },
-    { id: 9, name: "Cryo Protocol", diff: "Hard", cols: 23, rows: 15, coins: 26, gems: 3, powerups: ['freeze', 'shield'], enemies: [{ type: 'hunter' }, { type: 'ambusher' }, { type: 'trapper' }], hints: 2, targetTime: 62 },
-    { id: 10, name: "Chrono Challenge", diff: "Hard", cols: 23, rows: 17, coins: 28, gems: 4, powerups: ['freeze', 'speed'], enemies: [{ type: 'hunter' }, { type: 'ambusher' }, { type: 'trapper' }], hints: 2, targetTime: 65 },
-    { id: 11, name: "The Gauntlet", diff: "Very Hard", cols: 25, rows: 17, coins: 30, gems: 4, powerups: ['shield', 'freeze'], enemies: [{ type: 'hunter' }, { type: 'ambusher' }, { type: 'trapper' }, { type: 'patrol' }], hints: 2, targetTime: 72 },
-    { id: 12, name: "Labyrinth of Shadows", diff: "Very Hard", cols: 25, rows: 17, coins: 32, gems: 4, powerups: ['speed', 'shield'], enemies: [{ type: 'hunter' }, { type: 'ambusher' }, { type: 'trapper' }, { type: 'hunter' }], hints: 2, targetTime: 78 },
-    { id: 13, name: "Synapse Matrix", diff: "Expert", cols: 27, rows: 17, coins: 35, gems: 5, powerups: ['speed', 'shield', 'freeze'], enemies: [{ type: 'hunter' }, { type: 'ambusher' }, { type: 'trapper' }, { type: 'hunter' }], hints: 1, targetTime: 85 },
-    { id: 14, name: "Omega Survival", diff: "Expert", cols: 29, rows: 19, coins: 38, gems: 5, powerups: ['speed', 'shield', 'freeze'], enemies: [{ type: 'hunter' }, { type: 'hunter' }, { type: 'ambusher' }, { type: 'trapper' }, { type: 'patrol' }], hints: 1, targetTime: 95 },
-    { id: 15, name: "MAZEX CORE: THE OVERLORD", diff: "Final Boss", cols: 31, rows: 19, coins: 25, gems: 3, cores: 3, powerups: ['speed', 'shield', 'freeze'], enemies: [{ type: 'boss' }, { type: 'hunter' }, { type: 'ambusher' }], hints: 2, targetTime: 110 }
+    { id: 3, name: "The Neon Hunt", diff: "Easy", cols: 17, rows: 11, coins: 14, gems: 1, powerups: [], enemies: [{ type: 'hunter' }], hints: 5, targetTime: 36 },
+    { id: 4, name: "Split Circuits", diff: "Easy-Medium", cols: 17, rows: 13, coins: 16, gems: 1, powerups: [], enemies: [{ type: 'hunter' }], hints: 5, targetTime: 40 },
+    { id: 5, name: "Dual Threat", diff: "Medium", cols: 19, rows: 13, coins: 18, gems: 2, powerups: [], enemies: [{ type: 'hunter' }, { type: 'patrol' }], hints: 5, targetTime: 45 },
+    { id: 6, name: "Overdrive", diff: "Medium", cols: 19, rows: 13, coins: 20, gems: 2, powerups: ['speed'], enemies: [{ type: 'hunter' }, { type: 'ambusher' }], hints: 5, targetTime: 48 },
+    { id: 7, name: "Branching Paths", diff: "Medium-Hard", cols: 21, rows: 15, coins: 22, gems: 3, powerups: ['speed'], enemies: [{ type: 'hunter' }, { type: 'ambusher' }], hints: 5, targetTime: 52 },
+    { id: 8, name: "Cyber Defense", diff: "Hard", cols: 21, rows: 15, coins: 24, gems: 3, powerups: ['shield', 'speed'], enemies: [{ type: 'hunter' }, { type: 'ambusher' }, { type: 'trapper' }], hints: 5, targetTime: 58 },
+    { id: 9, name: "Cryo Protocol", diff: "Hard", cols: 23, rows: 15, coins: 26, gems: 3, powerups: ['freeze', 'shield'], enemies: [{ type: 'hunter' }, { type: 'ambusher' }, { type: 'trapper' }], hints: 5, targetTime: 62 },
+    { id: 10, name: "Chrono Challenge", diff: "Hard", cols: 23, rows: 17, coins: 28, gems: 4, powerups: ['freeze', 'speed'], enemies: [{ type: 'hunter' }, { type: 'ambusher' }, { type: 'trapper' }], hints: 5, targetTime: 65 },
+    { id: 11, name: "The Gauntlet", diff: "Very Hard", cols: 25, rows: 17, coins: 30, gems: 4, powerups: ['shield', 'freeze'], enemies: [{ type: 'hunter' }, { type: 'ambusher' }, { type: 'trapper' }, { type: 'patrol' }], hints: 5, targetTime: 72 },
+    { id: 12, name: "Labyrinth of Shadows", diff: "Very Hard", cols: 25, rows: 17, coins: 32, gems: 4, powerups: ['speed', 'shield'], enemies: [{ type: 'hunter' }, { type: 'ambusher' }, { type: 'trapper' }, { type: 'hunter' }], hints: 5, targetTime: 78 },
+    { id: 13, name: "Synapse Matrix", diff: "Expert", cols: 27, rows: 17, coins: 35, gems: 5, powerups: ['speed', 'shield', 'freeze'], enemies: [{ type: 'hunter' }, { type: 'ambusher' }, { type: 'trapper' }, { type: 'hunter' }], hints: 5, targetTime: 85 },
+    { id: 14, name: "Omega Survival", diff: "Expert", cols: 29, rows: 19, coins: 38, gems: 5, powerups: ['speed', 'shield', 'freeze'], enemies: [{ type: 'hunter' }, { type: 'hunter' }, { type: 'ambusher' }, { type: 'trapper' }], hints: 5, targetTime: 95 },
+    { id: 15, name: "MAZEX CORE: THE OVERLORD", diff: "Final Boss", cols: 31, rows: 19, coins: 25, gems: 3, cores: 3, powerups: ['speed', 'shield', 'freeze'], enemies: [{ type: 'boss' }, { type: 'hunter' }, { type: 'ambusher' }], hints: 5, targetTime: 110 }
 ];
 
 // ================= MAZE GRAPH GENERATOR =================
@@ -473,7 +516,7 @@ class MazeGenerator {
         return grid;
     }
 
-    static findPath(grid, cols, rows, startC, startR, endC, endR) {
+    static findPath(grid, cols, rows, startC, startR, endC, endR, avoidSafeZoneFn = null) {
         if (startC === endC && startR === endR) return [];
         const queue = [[{ c: startC, r: startR }]];
         const visited = Array.from({ length: rows }, () => Array(cols).fill(false));
@@ -493,6 +536,9 @@ class MazeGenerator {
             if (!cell.left && curr.c > 0) moves.push({ c: curr.c - 1, r: curr.r });
 
             for (const m of moves) {
+                if (avoidSafeZoneFn && avoidSafeZoneFn(m.c, m.r) && !(m.c === endC && m.r === endR)) {
+                    continue;
+                }
                 if (!visited[m.r][m.c]) {
                     visited[m.r][m.c] = true;
                     queue.push([...path, m]);
@@ -510,73 +556,227 @@ class Player {
         this.r = r;
         this.targetC = c;
         this.targetR = r;
+        this.cellSize = cellSize;
+        this.offsetX = offsetX;
+        this.offsetY = offsetY;
         this.x = offsetX + c * cellSize + cellSize / 2;
         this.y = offsetY + r * cellSize + cellSize / 2;
         this.radius = Math.max(6, cellSize * 0.35);
-        this.baseSpeed = 3.3;
+        this.baseSpeed = 4.0;
         this.dir = { x: 0, y: 0 };
         this.nextDir = { x: 0, y: 0 };
+        this.nextDirTimer = 0;
         this.invulnerable = 0;
         this.trail = [];
     }
 
-    update(keys, grid, cols, rows, cellSize, offsetX, offsetY, activeEffects) {
+    getOpenDirections(cell, cols, rows) {
+        if (!cell) return [];
+        const dirs = [];
+        if (!cell.top && cell.r > 0) dirs.push({ x: 0, y: -1, name: 'UP' });
+        if (!cell.right && cell.c < cols - 1) dirs.push({ x: 1, y: 0, name: 'RIGHT' });
+        if (!cell.bottom && cell.r < rows - 1) dirs.push({ x: 0, y: 1, name: 'DOWN' });
+        if (!cell.left && cell.c > 0) dirs.push({ x: -1, y: 0, name: 'LEFT' });
+        return dirs;
+    }
+
+    setNextDirection(newDir, grid, cols, rows) {
+        if (!newDir || (newDir.x === 0 && newDir.y === 0)) return;
+
+        // 1. Immediate 180-degree turnaround anytime anywhere along a corridor
+        if (this.dir.x !== 0 || this.dir.y !== 0) {
+            if (newDir.x === -this.dir.x && newDir.y === -this.dir.y) {
+                this.dir = { ...newDir };
+                this.nextDir = { ...newDir };
+                this.nextDirTimer = 30;
+                const prevTargetC = this.targetC;
+                const prevTargetR = this.targetR;
+                this.targetC = this.c;
+                this.targetR = this.r;
+                this.c = prevTargetC;
+                this.r = prevTargetR;
+                return;
+            }
+        }
+
+        // Set queued desired direction (stays queued until executed or replaced)
+        this.nextDir = { ...newDir };
+        this.nextDirTimer = 30;
+
+        const cs = this.cellSize || 32;
+        const ox = this.offsetX || 0;
+        const oy = this.offsetY || 0;
+
+        // 2. If the player is currently stopped at a wall:
+        if (this.dir.x === 0 && this.dir.y === 0) {
+            const cell = grid && grid[this.r] ? grid[this.r][this.c] : null;
+            if (cell) {
+                // If unobstructed in desired direction, start immediately!
+                if (this.canMove(cell, newDir, cols, rows)) {
+                    this.dir = { ...newDir };
+                    this.targetC = Math.max(0, Math.min(cols - 1, this.c + this.dir.x));
+                    this.targetR = Math.max(0, Math.min(rows - 1, this.r + this.dir.y));
+                    return;
+                }
+
+                // SMART CORNER & DEAD-END AUTO-NAVIGATION ASSIST:
+                // If blocked by a wall directly in newDir, check if an open passage leads towards newDir
+                const openDirs = this.getOpenDirections(cell, cols, rows);
+                let assistDir = null;
+                for (const od of openDirs) {
+                    const nextR = this.r + od.y;
+                    const nextC = this.c + od.x;
+                    if (nextR >= 0 && nextR < rows && nextC >= 0 && nextC < cols) {
+                        const nextCell = grid[nextR][nextC];
+                        if (this.canMove(nextCell, newDir, cols, rows)) {
+                            assistDir = od;
+                            break;
+                        }
+                    }
+                }
+
+                // If in a dead-end pocket (only 1 open exit), navigate along the open exit
+                if (!assistDir && openDirs.length === 1) {
+                    assistDir = openDirs[0];
+                }
+
+                if (assistDir) {
+                    this.dir = { ...assistDir };
+                    this.nextDir = { ...newDir };
+                    this.targetC = Math.max(0, Math.min(cols - 1, this.c + assistDir.x));
+                    this.targetR = Math.max(0, Math.min(rows - 1, this.r + assistDir.y));
+                    return;
+                }
+            }
+        }
+
+        // 3. Ultra-Responsive Corner-Assist & Perpendicular Snap-Turn:
+        // When moving perpendicularly to newDir, check if player is near an open corridor intersection
+        if (this.dir.x !== 0 && newDir.y !== 0) {
+            // Currently moving horizontally, turning vertically
+            const nearC = Math.round((this.x - ox - cs / 2) / cs);
+            if (nearC >= 0 && nearC < cols) {
+                const nearCenterX = ox + nearC * cs + cs / 2;
+                const distToCenter = Math.abs(this.x - nearCenterX);
+                if (distToCenter <= cs * 0.48) {
+                    const cell = grid && grid[this.r] ? grid[this.r][nearC] : null;
+                    if (cell && this.canMove(cell, newDir, cols, rows)) {
+                        this.x = nearCenterX;
+                        this.y = oy + this.r * cs + cs / 2;
+                        this.c = nearC;
+                        this.dir = { ...newDir };
+                        this.nextDir = { x: 0, y: 0 };
+                        this.nextDirTimer = 0;
+                        this.targetC = nearC;
+                        this.targetR = Math.max(0, Math.min(rows - 1, this.r + newDir.y));
+                        return;
+                    }
+                }
+            }
+        } else if (this.dir.y !== 0 && newDir.x !== 0) {
+            // Currently moving vertically, turning horizontally
+            const nearR = Math.round((this.y - oy - cs / 2) / cs);
+            if (nearR >= 0 && nearR < rows) {
+                const nearCenterY = oy + nearR * cs + cs / 2;
+                const distToCenter = Math.abs(this.y - nearCenterY);
+                if (distToCenter <= cs * 0.48) {
+                    const cell = grid && grid[nearR] ? grid[nearR][this.c] : null;
+                    if (cell && this.canMove(cell, newDir, cols, rows)) {
+                        this.x = ox + this.c * cs + cs / 2;
+                        this.y = nearCenterY;
+                        this.r = nearR;
+                        this.dir = { ...newDir };
+                        this.nextDir = { x: 0, y: 0 };
+                        this.nextDirTimer = 0;
+                        this.targetC = Math.max(0, Math.min(cols - 1, this.c + newDir.x));
+                        this.targetR = nearR;
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    update(grid, cols, rows, cellSize, offsetX, offsetY, activeEffects) {
+        this.cellSize = cellSize;
+        this.offsetX = offsetX;
+        this.offsetY = offsetY;
+
         if (this.invulnerable > 0) this.invulnerable--;
 
-        const speedMult = activeEffects.speed > 0 ? 1.6 : 1.0;
-        const speed = this.baseSpeed * speedMult;
+        // Decrement buffer timer for queued turns
+        if (this.nextDirTimer > 0) {
+            this.nextDirTimer--;
+            if (this.nextDirTimer === 0) {
+                this.nextDir = { x: 0, y: 0 };
+            }
+        }
 
-        if (keys['ArrowUp']    || keys['KeyW'] || keys['Numpad8'] || keys['PageUp'])    this.nextDir = { x: 0, y: -1 };
-        else if (keys['ArrowDown']  || keys['KeyS'] || keys['Numpad2'] || keys['PageDown']) this.nextDir = { x: 0, y: 1 };
-        else if (keys['ArrowLeft']  || keys['KeyA'] || keys['Numpad4'] || keys['Home'])     this.nextDir = { x: -1, y: 0 };
-        else if (keys['ArrowRight'] || keys['KeyD'] || keys['Numpad6'] || keys['End'])      this.nextDir = { x: 1, y: 0 };
+        const speedMult = activeEffects.speed > 0 ? 1.45 : 1.0;
+        const speed = this.baseSpeed * speedMult;
 
         const targetCenterX = offsetX + this.targetC * cellSize + cellSize / 2;
         const targetCenterY = offsetY + this.targetR * cellSize + cellSize / 2;
 
         const dx = targetCenterX - this.x;
         const dy = targetCenterY - this.y;
+        const distToTarget = Math.hypot(dx, dy);
 
-        if (Math.abs(dx) <= speed && Math.abs(dy) <= speed) {
+        if (distToTarget <= speed) {
+            const leftoverSpeed = speed - distToTarget;
             this.x = targetCenterX;
             this.y = targetCenterY;
             this.c = this.targetC;
             this.r = this.targetR;
 
-            const cell = grid[this.r][this.c];
-            if (this.canMove(cell, this.nextDir, cols, rows)) {
+            const cell = grid[this.r] ? grid[this.r][this.c] : null;
+
+            // 1. Turn into queued nextDir if unobstructed at this intersection
+            if (this.nextDir && (this.nextDir.x !== 0 || this.nextDir.y !== 0) && this.canMove(cell, this.nextDir, cols, rows)) {
                 this.dir = { ...this.nextDir };
-            } else if (!this.canMove(cell, this.dir, cols, rows)) {
+                this.nextDir = { x: 0, y: 0 };
+                this.nextDirTimer = 0;
+            } 
+            // 2. Else continue in current direction if unobstructed forward
+            else if (this.canMove(cell, this.dir, cols, rows)) {
+                // keep moving smoothly forward
+            } 
+            // 3. Else stopped at wall (NO auto-steering around corners without player command!)
+            else {
                 this.dir = { x: 0, y: 0 };
             }
 
             this.targetC = Math.max(0, Math.min(cols - 1, this.c + this.dir.x));
             this.targetR = Math.max(0, Math.min(rows - 1, this.r + this.dir.y));
+
+            // Apply leftover velocity to guarantee smooth 60fps cornering
+            if (leftoverSpeed > 0 && (this.dir.x !== 0 || this.dir.y !== 0)) {
+                this.x += this.dir.x * leftoverSpeed;
+                this.y += this.dir.y * leftoverSpeed;
+            }
         } else {
             this.x += this.dir.x * speed;
             this.y += this.dir.y * speed;
         }
 
-        // Motion trail during Speed Overdrive
+        // Motion trail during Speed Overdrive (smooth electric green cyber trail)
         if (activeEffects.speed > 0 && (this.dir.x !== 0 || this.dir.y !== 0)) {
-            if (Math.random() < 0.5) {
-                this.trail.push({
-                    x: this.x,
-                    y: this.y,
-                    alpha: 0.8,
-                    size: this.radius,
-                    color: '#00ffcc'
-                });
-            }
+            this.trail.push({
+                x: this.x,
+                y: this.y,
+                alpha: 0.75,
+                size: this.radius,
+                color: '#39ff14'
+            });
         }
         for (let i = this.trail.length - 1; i >= 0; i--) {
-            this.trail[i].alpha -= 0.06;
+            this.trail[i].alpha -= 0.08;
             if (this.trail[i].alpha <= 0) this.trail.splice(i, 1);
         }
     }
 
     canMove(cell, d, cols, rows) {
-        if (!cell || (d.x === 0 && d.y === 0)) return false;
+        if (!cell || !d || (d.x === 0 && d.y === 0)) return false;
         if (d.y === -1 && !cell.top && cell.r > 0) return true;
         if (d.x === 1 && !cell.right && cell.c < cols - 1) return true;
         if (d.y === 1 && !cell.bottom && cell.r < rows - 1) return true;
@@ -584,7 +784,7 @@ class Player {
         return false;
     }
 
-    draw(ctx, activeEffects) {
+    draw(ctx, activeEffects, inSafeZone = false, activeProtection = null) {
         // Draw motion trail
         this.trail.forEach(t => {
             ctx.fillStyle = t.color ? `${t.color}55` : 'rgba(0, 255, 204, 0.3)';
@@ -596,11 +796,13 @@ class Player {
         // Invulnerability flicker
         if (this.invulnerable > 0 && Math.floor(Date.now() / 80) % 2 === 0) return;
 
-        // Glowing outer body
+        // Glowing outer body with electric green aura when Speed Boost is active
+        const isSpeeding = activeEffects && activeEffects.speed > 0;
+        const bodyColor = isSpeeding ? '#39ff14' : '#00ffcc';
         ctx.save();
-        ctx.shadowBlur = 14;
-        ctx.shadowColor = '#00ffcc';
-        ctx.fillStyle = '#00ffcc';
+        ctx.shadowBlur = isSpeeding ? 18 : 14;
+        ctx.shadowColor = bodyColor;
+        ctx.fillStyle = bodyColor;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fill();
@@ -613,7 +815,7 @@ class Player {
         ctx.fill();
 
         // Cyber Shield forcefield
-        if (activeEffects.shield > 0) {
+        if (activeEffects && activeEffects.shield > 0) {
             ctx.save();
             ctx.strokeStyle = '#00bfff';
             ctx.lineWidth = 2.5;
@@ -622,6 +824,48 @@ class Player {
             ctx.beginPath();
             const angle = Date.now() / 180;
             ctx.arc(this.x, this.y, this.radius + 6, angle, angle + Math.PI * 1.6);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // Nanite Armor Hex Grid
+        if (activeProtection === 'armor') {
+            ctx.save();
+            ctx.strokeStyle = '#ffd700';
+            ctx.lineWidth = 1.8;
+            ctx.shadowBlur = 12;
+            ctx.shadowColor = '#ffd700';
+            ctx.beginPath();
+            const angle = Date.now() / 250;
+            for (let i = 0; i < 6; i++) {
+                const a = angle + i * (Math.PI / 3);
+                const r = this.radius + 5;
+                const hx = this.x + Math.cos(a) * r;
+                const hy = this.y + Math.sin(a) * r;
+                if (i === 0) ctx.moveTo(hx, hy);
+                else ctx.lineTo(hx, hy);
+            }
+            ctx.closePath();
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // Safe Zone Protective Dome (or Portable Sanctuary Bubble)
+        if (inSafeZone || (activeEffects && activeEffects.bubble > 0)) {
+            ctx.save();
+            ctx.strokeStyle = '#00ffcc';
+            ctx.lineWidth = 2.4;
+            ctx.shadowBlur = 16;
+            ctx.shadowColor = '#00ffcc';
+            ctx.beginPath();
+            const angle = Date.now() / 220;
+            ctx.arc(this.x, this.y, this.radius + 7, angle, angle + Math.PI * 1.5);
+            ctx.stroke();
+
+            ctx.strokeStyle = 'rgba(0, 240, 255, 0.8)';
+            ctx.lineWidth = 1.4;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius + 4, -angle * 1.4, -angle * 1.4 + Math.PI * 1.2);
             ctx.stroke();
             ctx.restore();
         }
@@ -665,15 +909,18 @@ class ExpressiveEnemy {
         this.retargetTimer = 0;
     }
 
-    pickNewRoamTarget(cols, rows, player = null) {
+    pickNewRoamTarget(cols, rows, game = null) {
         let bestC = Math.floor(Math.random() * cols);
         let bestR = Math.floor(Math.random() * rows);
         let maxDist = 0;
 
-        // Sample 6 random points across the maze and pick a distant quadrant to ensure full board traversal
-        for (let tries = 0; tries < 6; tries++) {
+        // Sample 8 random points across the maze and pick a distant quadrant to ensure full board traversal
+        for (let tries = 0; tries < 8; tries++) {
             const tc = Math.floor(Math.random() * cols);
             const tr = Math.floor(Math.random() * rows);
+            // Don't pick safe zones as roam destinations
+            if (game && game.isSafeZone(tc, tr)) continue;
+
             const dist = Math.hypot(tc - this.c, tr - this.r);
             if (dist > maxDist) {
                 maxDist = dist;
@@ -687,14 +934,14 @@ class ExpressiveEnemy {
         this.retargetTimer = Math.floor(Math.random() * 180) + 240; // 4 to 7 seconds
     }
 
-    defeat(durationFrames = 1200) {
+    defeat(durationFrames = 120) {
         this.defeatedTimer = durationFrames;
         this.state = 'defeated';
         this.burstActive = false;
         this.alertTimer = 0;
     }
 
-    update(player, grid, cols, rows, cellSize, offsetX, offsetY, isFrozen) {
+    update(player, grid, cols, rows, cellSize, offsetX, offsetY, isFrozen, game = null) {
         if (this.defeatedTimer > 0) {
             this.defeatedTimer--;
             this.state = 'defeated';
@@ -729,14 +976,16 @@ class ExpressiveEnemy {
 
         const dx = targetCenterX - this.x;
         const dy = targetCenterY - this.y;
+        const distToCenter = Math.hypot(dx, dy);
 
-        if (Math.abs(dx) <= effectiveSpeed && Math.abs(dy) <= effectiveSpeed) {
+        if (distToCenter <= effectiveSpeed) {
+            const leftoverSpeed = effectiveSpeed - distToCenter;
             this.x = targetCenterX;
             this.y = targetCenterY;
             this.c = this.targetC;
             this.r = this.targetR;
 
-            const cell = grid[this.r][this.c];
+            const cell = grid[this.r] ? grid[this.r][this.c] : null;
             if (!cell) return;
 
             // Available corridor exits from current cell
@@ -748,15 +997,20 @@ class ExpressiveEnemy {
 
             if (exits.length === 0) return;
 
+            // Enemies cannot enter safe zone cells
+            const safeZoneFilteredExits = exits.filter(e => !(game && game.isSafeZone(e.c, e.r)));
+            const usableExits = safeZoneFilteredExits.length > 0 ? safeZoneFilteredExits : exits;
+
             const distToPlayer = Math.hypot(player.c - this.c, player.r - this.r);
+            const playerProtected = game ? game.isPlayerInSafeZone() : false;
 
             // Determine if pursuing player or roaming across entire maze
             let destC = this.roamTargetC;
             let destR = this.roamTargetR;
 
-            const isChasing = (this.type === 'hunter' || this.type === 'boss') && distToPlayer <= 9;
-            const isAmbushing = this.type === 'ambusher' && distToPlayer <= 7;
-            const isTrapping = this.type === 'trapper' && distToPlayer <= 5;
+            const isChasing = !playerProtected && (this.type === 'hunter' || this.type === 'boss') && distToPlayer <= 9;
+            const isAmbushing = !playerProtected && this.type === 'ambusher' && distToPlayer <= 7;
+            const isTrapping = !playerProtected && this.type === 'trapper' && distToPlayer <= 5;
 
             if (isChasing || isAmbushing || isTrapping) {
                 if (this.state !== 'chasing' && this.state !== 'alert') {
@@ -777,34 +1031,41 @@ class ExpressiveEnemy {
             } else {
                 this.state = 'normal';
                 // Pick a new distant roam target across the board if needed, arrived, or expired
-                if (destC === null || destR === null || this.retargetTimer <= 0 || (this.c === destC && this.r === destR)) {
-                    this.pickNewRoamTarget(cols, rows, player);
+                if (destC === null || destR === null || this.retargetTimer <= 0 || (this.c === destC && this.r === destR) || (game && game.isSafeZone(destC, destR))) {
+                    this.pickNewRoamTarget(cols, rows, game);
                     destC = this.roamTargetC;
                     destR = this.roamTargetR;
                 }
             }
 
-            // Pathfind through the maze corridors using BFS MazeGenerator.findPath
+            // Pathfind through the maze corridors using BFS MazeGenerator.findPath, avoiding safe zones
             let nextStep = null;
             if (destC !== null && destR !== null && (destC !== this.c || destR !== this.r)) {
-                const path = MazeGenerator.findPath(grid, cols, rows, this.c, this.r, destC, destR);
+                const avoidSafeZoneFn = (c, r) => (game ? game.isSafeZone(c, r) : false);
+                const path = MazeGenerator.findPath(grid, cols, rows, this.c, this.r, destC, destR, avoidSafeZoneFn);
                 if (path && path.length > 1) {
                     nextStep = path[1];
                 }
             }
 
-            if (nextStep) {
+            if (nextStep && usableExits.some(e => e.c === nextStep.c && e.r === nextStep.r)) {
                 this.dir = { x: nextStep.c - this.c, y: nextStep.r - this.r };
             } else {
                 // If path not resolved, avoid 180 reversal unless dead-end
-                const nonReverseExits = exits.filter(e => !(e.x === -this.dir.x && e.y === -this.dir.y));
-                const candidates = nonReverseExits.length > 0 ? nonReverseExits : exits;
+                const nonReverseExits = usableExits.filter(e => !(e.x === -this.dir.x && e.y === -this.dir.y));
+                const candidates = nonReverseExits.length > 0 ? nonReverseExits : usableExits;
                 const picked = candidates[Math.floor(Math.random() * candidates.length)];
                 this.dir = { x: picked.x, y: picked.y };
             }
 
             this.targetC = Math.max(0, Math.min(cols - 1, this.c + this.dir.x));
             this.targetR = Math.max(0, Math.min(rows - 1, this.r + this.dir.y));
+
+            // Apply leftover velocity to eliminate cell transition hitch
+            if (leftoverSpeed > 0 && (this.dir.x !== 0 || this.dir.y !== 0)) {
+                this.x += this.dir.x * leftoverSpeed;
+                this.y += this.dir.y * leftoverSpeed;
+            }
         } else {
             this.x += this.dir.x * effectiveSpeed;
             this.y += this.dir.y * effectiveSpeed;
@@ -1157,11 +1418,32 @@ class EffectManager {
         this.floatTexts.forEach(ft => {
             ctx.save();
             ctx.globalAlpha = Math.max(0, ft.alpha);
-            ctx.fillStyle = ft.color;
-            ctx.shadowBlur = 8;
-            ctx.shadowColor = ft.color;
-            ctx.font = 'bold 13px Orbitron';
+            ctx.font = 'bold 12px Orbitron, sans-serif';
             ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            const metrics = ctx.measureText(ft.text);
+            const padX = 8;
+            const padY = 3;
+            const boxW = Math.max(30, metrics.width + padX * 2);
+            const boxH = 18;
+
+            // Sleek translucent cyber pill backdrop (never overlaps or clashes with walls)
+            ctx.fillStyle = 'rgba(10, 15, 30, 0.90)';
+            ctx.strokeStyle = ft.color;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            if (typeof ctx.roundRect === 'function') {
+                ctx.roundRect(ft.x - boxW / 2, ft.y - boxH / 2, boxW, boxH, 4);
+            } else {
+                ctx.rect(ft.x - boxW / 2, ft.y - boxH / 2, boxW, boxH);
+            }
+            ctx.fill();
+            ctx.stroke();
+
+            // Text with glow
+            ctx.fillStyle = ft.color;
+            ctx.shadowBlur = 6;
+            ctx.shadowColor = ft.color;
             ctx.fillText(ft.text, ft.x, ft.y);
             ctx.restore();
         });
@@ -1181,6 +1463,31 @@ class EffectManager {
         });
     }
 }
+
+// ================= KEYBOARD INPUT MAPPINGS =================
+const KEY_TO_DIR = {
+    // Arrow Keys (standard codes and keys)
+    'ArrowUp': 'UP', 'ArrowDown': 'DOWN', 'ArrowLeft': 'LEFT', 'ArrowRight': 'RIGHT',
+    'Up': 'UP', 'Down': 'DOWN', 'Left': 'LEFT', 'Right': 'RIGHT',
+    // WASD (case-insensitive)
+    'KeyW': 'UP', 'KeyS': 'DOWN', 'KeyA': 'LEFT', 'KeyD': 'RIGHT',
+    'w': 'UP', 'W': 'UP', 's': 'DOWN', 'S': 'DOWN', 'a': 'LEFT', 'A': 'LEFT', 'd': 'RIGHT', 'D': 'RIGHT',
+    // Dedicated Navigation Cluster
+    'Home': 'LEFT', 'End': 'RIGHT', 'PageUp': 'UP', 'PageDown': 'DOWN',
+    // Numpad (both with NumLock On & Off)
+    'Numpad8': 'UP', 'Numpad2': 'DOWN', 'Numpad4': 'LEFT', 'Numpad6': 'RIGHT',
+    'Numpad7': 'LEFT', 'Numpad1': 'RIGHT', 'Numpad9': 'UP', 'Numpad3': 'DOWN',
+    '8': 'UP', '2': 'DOWN', '4': 'LEFT', '6': 'RIGHT',
+    '7': 'LEFT', '1': 'RIGHT', '9': 'UP', '3': 'DOWN'
+};
+
+const MOVEMENT_KEYS = new Set([
+    'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Up', 'Down', 'Left', 'Right',
+    'KeyW', 'KeyA', 'KeyS', 'KeyD', 'w', 'W', 'a', 'A', 's', 'S', 'd', 'D',
+    'Home', 'End', 'PageUp', 'PageDown',
+    'Numpad8', 'Numpad2', 'Numpad4', 'Numpad6', 'Numpad7', 'Numpad1', 'Numpad9', 'Numpad3',
+    '8', '2', '4', '6', '7', '1', '9', '3'
+]);
 
 // ================= MAIN GAME CONTROLLER =================
 class MazeXGame {
@@ -1216,10 +1523,11 @@ class MazeXGame {
         this.campaignScore = 0;
         this.campaignTime = 0;
         this.campaignCollectibles = 0;
+        this.claimedBonusLevels = [];
 
         // Power-ups and timers
-        this.activeEffects = { speed: 0, shield: 0, freeze: 0 };
-        this.hintsRemaining = 3;
+        this.activeEffects = { speed: 0, shield: 0, freeze: 0, bubble: 0 };
+        this.hintsRemaining = 5;
         this.hintCooldown = 0;
         this.activeHintPath = [];
         this.hintRenderTimer = 0;
@@ -1238,8 +1546,17 @@ class MazeXGame {
         this.items = [];
         this.exitItem = null;
 
-        // Inputs
+        // Inputs & Direction Controls (LIFO Stack for Instant Responsiveness)
         this.keys = {};
+        this.heldDirectionStack = [];
+        this.activeDirection = null;
+
+        // Safe Zones (for levels after level 10)
+        this.safeZones = [];
+        this.safeZoneKeys = new Set();
+        this.wasInSafeZone = false;
+        this.activeProtection = null;
+        this.isPowersModalOpen = false;
 
         // DOM Screens & Elements
         this.screens = {
@@ -1252,12 +1569,54 @@ class MazeXGame {
             complete: document.getElementById('screen-level-complete'),
             gameOver: document.getElementById('screen-game-over'),
             victory: document.getElementById('screen-victory'),
+            tacticalPowers: document.getElementById('screen-tactical-powers'),
             confirmReset: document.getElementById('modal-confirm-reset')
         };
         this.hud = document.getElementById('hud');
         this.toastBanner = document.getElementById('toast-banner');
 
         this.init();
+    }
+
+    clearInput() {
+        this.keys = {};
+        this.heldDirectionStack = [];
+        this.activeDirection = null;
+    }
+
+    setDesiredDirection(dirName) {
+        if (!dirName) return;
+        const DIR_VECTORS = {
+            'UP': { x: 0, y: -1 },
+            'DOWN': { x: 0, y: 1 },
+            'LEFT': { x: -1, y: 0 },
+            'RIGHT': { x: 1, y: 0 }
+        };
+        const vec = DIR_VECTORS[dirName];
+        if (vec && this.player) {
+            this.player.setNextDirection(vec, this.grid, this.cols, this.rows);
+        }
+    }
+
+    handleDirectionPress(dirName) {
+        if (!dirName) return;
+        // Move this direction to the top of the stack (most recent active input)
+        this.heldDirectionStack = this.heldDirectionStack.filter(d => d !== dirName);
+        this.heldDirectionStack.push(dirName);
+        this.activeDirection = dirName;
+        this.setDesiredDirection(dirName);
+    }
+
+    handleDirectionRelease(dirName) {
+        if (!dirName) return;
+        this.heldDirectionStack = this.heldDirectionStack.filter(d => d !== dirName);
+        if (this.heldDirectionStack.length > 0) {
+            // Revert to previously held direction
+            this.activeDirection = this.heldDirectionStack[this.heldDirectionStack.length - 1];
+            this.setDesiredDirection(this.activeDirection);
+        } else {
+            this.activeDirection = null;
+        }
     }
 
     init() {
@@ -1283,6 +1642,35 @@ class MazeXGame {
             this.confettiCanvas.width = this.canvas.width;
             this.confettiCanvas.height = this.canvas.height;
             this.recalculateMazeLayout();
+
+            // Synchronize entity coordinates smoothly when resized
+            if (this.player && this.cellSize) {
+                this.player.radius = Math.max(6, this.cellSize * 0.35);
+                this.player.x = this.offsetX + this.player.c * this.cellSize + this.cellSize / 2;
+                this.player.y = this.offsetY + this.player.r * this.cellSize + this.cellSize / 2;
+            }
+            if (this.items && this.cellSize) {
+                this.items.forEach(it => {
+                    it.radius = it.type === 'gem' ? Math.max(6, this.cellSize * 0.32) :
+                                it.type === 'core' ? Math.max(8, this.cellSize * 0.4) :
+                                it.type === 'exit' ? Math.max(14, this.cellSize * 0.7) :
+                                Math.max(4, this.cellSize * 0.25);
+                    it.x = this.offsetX + it.c * this.cellSize + this.cellSize / 2;
+                    it.y = this.offsetY + it.r * this.cellSize + this.cellSize / 2;
+                });
+            }
+            if (this.exitItem && this.cellSize) {
+                this.exitItem.radius = Math.max(14, this.cellSize * 0.7);
+                this.exitItem.x = this.offsetX + this.exitItem.c * this.cellSize + this.cellSize / 2;
+                this.exitItem.y = this.offsetY + this.exitItem.r * this.cellSize + this.cellSize / 2;
+            }
+            if (this.enemies && this.cellSize) {
+                this.enemies.forEach(e => {
+                    e.radius = Math.max(5, this.cellSize * 0.28);
+                    e.x = this.offsetX + e.c * this.cellSize + this.cellSize / 2;
+                    e.y = this.offsetY + e.r * this.cellSize + this.cellSize / 2;
+                });
+            }
         }
     }
 
@@ -1299,17 +1687,35 @@ class MazeXGame {
     bindEvents() {
         window.addEventListener('resize', () => this.resize());
 
+        // Ensure canvas clicks refocus game window and clear any button focus
+        const focusGameWindow = () => {
+            if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                document.activeElement.blur();
+            }
+            if (this.canvas && typeof this.canvas.focus === 'function') {
+                this.canvas.focus();
+            }
+            window.focus();
+        };
+        this.canvas.addEventListener('mousedown', focusGameWindow);
+        this.canvas.addEventListener('click', focusGameWindow);
+
         window.addEventListener('keydown', (e) => {
             sound.init();
 
-            // Prevent browser from scrolling / navigating on game keys
-            const GAME_KEYS = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',
-                'KeyW','KeyA','KeyS','KeyD',
-                'Numpad2','Numpad4','Numpad6','Numpad8',
-                'PageUp','PageDown','Home','End'];
-            if (GAME_KEYS.includes(e.code)) e.preventDefault();
+            // Prevent browser scrolling and default actions for all movement keys
+            if (MOVEMENT_KEYS.has(e.code) || MOVEMENT_KEYS.has(e.key)) {
+                e.preventDefault();
+            }
 
-            // Ignore gameplay movement keys if not in active PLAYING state
+            // Close tactical powers modal on ESC or B toggle or Enter
+            if (this.isPowersModalOpen) {
+                if (e.code === 'Escape' || e.key === 'Escape' || e.code === 'KeyB' || e.key === 'b' || e.key === 'B' || e.code === 'Enter') {
+                    this.hideTacticalPowersModal();
+                }
+                return;
+            }
+
             if (this.gameState !== 'PLAYING') {
                 if (e.code === 'Escape' || e.code === 'KeyP') {
                     if (this.gameState === 'PAUSED') this.resumeGame();
@@ -1317,32 +1723,73 @@ class MazeXGame {
                 return;
             }
 
-            this.keys[e.code] = true;
+            const kCode = e.code || '';
+            const kKey = e.key || '';
+            const dirName = KEY_TO_DIR[kCode] || KEY_TO_DIR[kKey] || KEY_TO_DIR[kKey.toLowerCase()] || KEY_TO_DIR[kKey.toUpperCase()];
+            if (dirName) {
+                this.handleDirectionPress(dirName);
+            }
 
             if (e.code === 'Escape' || e.code === 'KeyP') {
                 this.pauseGame();
             }
 
-            if (e.code === 'KeyH') {
+            if (e.code === 'KeyH' || e.key === 'h' || e.key === 'H') {
                 this.triggerHint();
+            }
+
+            if (e.code === 'Space') {
+                e.preventDefault();
+                this.triggerCyberStrike();
+            }
+
+            // Open Tactical Powers Arsenal on B key for Advanced Sectors (13, 14, 15)
+            if (e.code === 'KeyB' || e.key === 'b' || e.key === 'B') {
+                const cfg = LEVELS_CONFIG[this.currentLevelIdx];
+                if (cfg && cfg.id >= 13) {
+                    this.showTacticalPowersModal();
+                }
             }
         });
 
         window.addEventListener('keyup', (e) => {
-            this.keys[e.code] = false;
+            const kCode = e.code || '';
+            const kKey = e.key || '';
+            const dirName = KEY_TO_DIR[kCode] || KEY_TO_DIR[kKey] || KEY_TO_DIR[kKey.toLowerCase()] || KEY_TO_DIR[kKey.toUpperCase()];
+            if (dirName) {
+                this.handleDirectionRelease(dirName);
+            }
         });
 
-        // Main Menu Navigation
+        window.addEventListener('blur', () => {
+            this.clearInput();
+            if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                document.activeElement.blur();
+            }
+            window.focus();
+        });
+
+        // Main Menu Navigation (Always start with full 3 lives and 100 health)
         document.getElementById('btn-play').addEventListener('click', () => {
             sound.init();
             sound.playClick();
+            if (this.areAllLevelsCompleted()) {
+                this.showVictoryScreen();
+                return;
+            }
             const session = ProgressManager.getSavedSession();
-            if (session && session.levelIdx !== undefined) {
+            const starsMap = ProgressManager.getLevelStars();
+            if (session && session.levelIdx !== undefined && (!starsMap[session.levelIdx + 1] || starsMap[session.levelIdx + 1] === 0)) {
                 this.score = session.score || 0;
-                this.lives = session.lives || 3;
-                this.health = session.health || 100;
+                this.campaignScore = session.score || 0;
+                this.lives = 3;
+                this.health = 100;
+                this.claimedBonusLevels = session.claimedBonusLevels || [];
                 this.startLevel(session.levelIdx);
             } else {
+                this.score = 0;
+                this.campaignScore = 0;
+                this.claimedBonusLevels = [];
                 const targetIdx = this.getNextIncompleteLevelIndex();
                 this.startLevel(targetIdx);
             }
@@ -1353,13 +1800,23 @@ class MazeXGame {
             btnLevelsContinue.addEventListener('click', () => {
                 sound.init();
                 sound.playClick();
+                if (this.areAllLevelsCompleted()) {
+                    this.showVictoryScreen();
+                    return;
+                }
                 const session = ProgressManager.getSavedSession();
-                if (session && session.levelIdx !== undefined) {
+                const starsMap = ProgressManager.getLevelStars();
+                if (session && session.levelIdx !== undefined && (!starsMap[session.levelIdx + 1] || starsMap[session.levelIdx + 1] === 0)) {
                     this.score = session.score || 0;
-                    this.lives = session.lives || 3;
-                    this.health = session.health || 100;
+                    this.campaignScore = session.score || 0;
+                    this.lives = 3;
+                    this.health = 100;
+                    this.claimedBonusLevels = session.claimedBonusLevels || [];
                     this.startLevel(session.levelIdx);
                 } else {
+                    this.score = 0;
+                    this.campaignScore = 0;
+                    this.claimedBonusLevels = [];
                     const targetIdx = this.getNextIncompleteLevelIndex();
                     this.startLevel(targetIdx);
                 }
@@ -1421,6 +1878,9 @@ class MazeXGame {
         document.getElementById('btn-confirm-reset').addEventListener('click', () => {
             sound.playClick();
             ProgressManager.resetProgress();
+            this.score = 0;
+            this.campaignScore = 0;
+            this.claimedBonusLevels = [];
             document.getElementById('modal-confirm-reset').classList.add('hidden');
             this.updateContinueButtonState();
             this.renderLevelSelectGrid();
@@ -1462,6 +1922,31 @@ class MazeXGame {
         document.getElementById('btn-hud-hint').addEventListener('click', () => { sound.init(); this.triggerHint(); });
         document.getElementById('btn-hud-pause').addEventListener('click', () => { sound.init(); this.pauseGame(); });
 
+        const btnHudPowers = document.getElementById('btn-hud-powers');
+        if (btnHudPowers) {
+            btnHudPowers.addEventListener('click', () => {
+                sound.init();
+                sound.playClick();
+                this.showTacticalPowersModal();
+            });
+        }
+
+        const btnPowersDeploy = document.getElementById('btn-powers-deploy');
+        if (btnPowersDeploy) {
+            btnPowersDeploy.addEventListener('click', () => {
+                sound.playClick();
+                this.hideTacticalPowersModal();
+            });
+        }
+
+        const btnClosePowersX = document.getElementById('btn-close-powers-x');
+        if (btnClosePowersX) {
+            btnClosePowersX.addEventListener('click', () => {
+                sound.playClick();
+                this.hideTacticalPowersModal();
+            });
+        }
+
         // Pause Modal
         document.getElementById('btn-pause-resume').addEventListener('click', () => this.resumeGame());
         document.getElementById('btn-pause-restart').addEventListener('click', () => {
@@ -1482,10 +1967,22 @@ class MazeXGame {
         document.getElementById('btn-next-level').addEventListener('click', () => {
             sound.playClick();
             this.isLevelCompleting = false;
-            if (this.currentLevelIdx + 1 < LEVELS_CONFIG.length) {
+            if (this.areAllLevelsCompleted()) {
+                this.showVictoryScreen();
+                return;
+            }
+            const starsMap = ProgressManager.getLevelStars();
+            // If subsequent level in sequence is incomplete, launch it
+            if (this.currentLevelIdx + 1 < LEVELS_CONFIG.length && (!starsMap[this.currentLevelIdx + 2] || starsMap[this.currentLevelIdx + 2] === 0)) {
                 this.startLevel(this.currentLevelIdx + 1);
             } else {
-                this.showVictoryScreen();
+                // Otherwise jump directly to the first incomplete level!
+                const nextIncomplete = this.getFirstIncompleteLevelIndex();
+                if (nextIncomplete !== -1) {
+                    this.startLevel(nextIncomplete);
+                } else {
+                    this.showVictoryScreen();
+                }
             }
         });
         document.getElementById('btn-replay-level').addEventListener('click', () => {
@@ -1522,6 +2019,7 @@ class MazeXGame {
             this.campaignCollectibles = 0;
             this.lives = 3;
             this.health = 100;
+            this.claimedBonusLevels = [];
             this.isLevelCompleting = false;
             ProgressManager.clearSavedSession();
             this.startLevel(0);
@@ -1541,25 +2039,32 @@ class MazeXGame {
         // Mobile Controls
         ['up', 'down', 'left', 'right'].forEach(dir => {
             const btn = document.getElementById(`dpad-${dir}`);
-            const code = 'Arrow' + dir.charAt(0).toUpperCase() + dir.slice(1);
+            const dirName = dir.toUpperCase();
             if (btn) {
-                btn.addEventListener('touchstart', (e) => {
+                const press = (e) => {
                     e.preventDefault();
                     if (this.gameState === 'PLAYING') {
                         sound.init();
-                        this.keys[code] = true;
+                        this.handleDirectionPress(dirName);
                     }
-                });
-                btn.addEventListener('touchend', (e) => { e.preventDefault(); this.keys[code] = false; });
-                btn.addEventListener('mousedown', () => {
-                    if (this.gameState === 'PLAYING') {
-                        sound.init();
-                        this.keys[code] = true;
-                    }
-                });
-                btn.addEventListener('mouseup', () => { this.keys[code] = false; });
+                };
+                const release = (e) => {
+                    e.preventDefault();
+                    this.handleDirectionRelease(dirName);
+                };
+                btn.addEventListener('touchstart', press, { passive: false });
+                btn.addEventListener('touchend', release);
+                btn.addEventListener('mousedown', press);
+                btn.addEventListener('mouseup', release);
+                btn.addEventListener('mouseleave', release);
             }
         });
+        const btnMStrike = document.getElementById('m-btn-strike');
+        if (btnMStrike) {
+            btnMStrike.addEventListener('click', () => {
+                if (this.gameState === 'PLAYING') this.triggerCyberStrike();
+            });
+        }
         document.getElementById('m-btn-hint').addEventListener('click', () => {
             if (this.gameState === 'PLAYING') this.triggerHint();
         });
@@ -1569,6 +2074,7 @@ class MazeXGame {
     }
 
     showScreen(screenName) {
+        this.isPowersModalOpen = false;
         Object.values(this.screens).forEach(s => s && s.classList.add('hidden'));
         if (screenName === 'hud') {
             this.hud.classList.remove('hidden');
@@ -1617,12 +2123,40 @@ class MazeXGame {
         }
     }
 
+    areAllLevelsCompleted() {
+        const starsMap = ProgressManager.getLevelStars();
+        return LEVELS_CONFIG.every(cfg => (starsMap[cfg.id] || 0) > 0);
+    }
+
+    getFirstIncompleteLevelIndex() {
+        const starsMap = ProgressManager.getLevelStars();
+        for (let idx = 0; idx < LEVELS_CONFIG.length; idx++) {
+            const levelNum = LEVELS_CONFIG[idx].id;
+            if (!starsMap[levelNum] || starsMap[levelNum] === 0) {
+                return idx;
+            }
+        }
+        return -1;
+    }
+
+    getCompletedLevelsCount() {
+        const starsMap = ProgressManager.getLevelStars();
+        let count = 0;
+        LEVELS_CONFIG.forEach(cfg => {
+            if ((starsMap[cfg.id] || 0) > 0) count++;
+        });
+        return count;
+    }
+
     getNextIncompleteLevelIndex() {
+        const starsMap = ProgressManager.getLevelStars();
         const session = ProgressManager.getSavedSession();
         if (session && session.levelIdx !== undefined) {
-            return session.levelIdx;
+            const sessionLevelNum = session.levelIdx + 1;
+            if (!starsMap[sessionLevelNum] || starsMap[sessionLevelNum] === 0) {
+                return session.levelIdx;
+            }
         }
-        const starsMap = ProgressManager.getLevelStars();
         for (let l = 1; l <= 15; l++) {
             if (!starsMap[l] || starsMap[l] === 0) {
                 return l - 1;
@@ -1634,6 +2168,10 @@ class MazeXGame {
     updateContinueButtonState() {
         const btnContinue = document.getElementById('btn-levels-continue');
         if (!btnContinue) return;
+        if (this.areAllLevelsCompleted()) {
+            btnContinue.innerText = 'CONQUERED (VIEW VICTORY)';
+            return;
+        }
         const targetIdx = this.getNextIncompleteLevelIndex();
         if (targetIdx === 0) {
             btnContinue.innerText = 'START LEVEL 1';
@@ -1650,8 +2188,9 @@ class MazeXGame {
 
         const highestUnlocked = ProgressManager.getUnlockedLevel();
         const starsMap = ProgressManager.getLevelStars();
+        const allCompleted = this.areAllLevelsCompleted();
         const targetIdx = this.getNextIncompleteLevelIndex();
-        const currentTargetLvl = targetIdx + 1;
+        const currentTargetLvl = allCompleted ? -1 : (targetIdx + 1);
 
         LEVELS_CONFIG.forEach((cfg, idx) => {
             const levelNum = cfg.id;
@@ -1727,6 +2266,26 @@ class MazeXGame {
         const cfg = LEVELS_CONFIG[idx];
         if (!cfg) return;
 
+        // Fresh 3 lives and 100 health per level (no lives continuation across sectors)
+        this.lives = 3;
+        this.health = 100;
+        this.activeProtection = null;
+        this.isPowersModalOpen = false;
+
+        // Enemy Kill Quota for Levels 12 onwards (up to 3 kills allowed per sector until reaching goal)
+        this.enemiesKilledThisLevel = 0;
+        this.maxEnemyKills = (cfg.id >= 12) ? 3 : 0;
+
+        // Tactical Defense Score Budget for Advanced Sectors (Levels 13, 14, 15)
+        // Ensures the player has available score to equip cyber protection
+        if (cfg.id >= 13) {
+            const minTacticalBudgets = { 13: 350, 14: 450, 15: 600 };
+            const requiredMin = minTacticalBudgets[cfg.id] || 350;
+            if (!this.score || this.score < requiredMin) {
+                this.score = requiredMin;
+            }
+        }
+
         ProgressManager.updateStats(st => st.gamesPlayed = (st.gamesPlayed || 0) + 1);
 
         this.cols = cfg.cols;
@@ -1735,6 +2294,47 @@ class MazeXGame {
 
         this.grid = MazeGenerator.generate(this.cols, this.rows);
         this.player = new Player(0, 0, this.cellSize, this.offsetX, this.offsetY);
+        this.clearInput();
+        if (document.activeElement && typeof document.activeElement.blur === 'function') {
+            document.activeElement.blur();
+        }
+        window.focus();
+
+        // Safe Zones for harder levels (Level 11 through 15)
+        this.safeZones = [];
+        this.safeZoneKeys = new Set();
+        this.wasInSafeZone = false;
+
+        if (cfg.id > 10) {
+            // Generate safe zones where pink enemies cannot enter or attack
+            const numZones = cfg.id >= 13 ? 3 : 2;
+            const quadrants = [
+                { cMin: Math.floor(this.cols * 0.55), cMax: Math.floor(this.cols * 0.85), rMin: Math.floor(this.rows * 0.15), rMax: Math.floor(this.rows * 0.45) },
+                { cMin: Math.floor(this.cols * 0.15), cMax: Math.floor(this.cols * 0.45), rMin: Math.floor(this.rows * 0.55), rMax: Math.floor(this.rows * 0.85) },
+                { cMin: Math.floor(this.cols * 0.38), cMax: Math.floor(this.cols * 0.65), rMin: Math.floor(this.rows * 0.38), rMax: Math.floor(this.rows * 0.65) }
+            ];
+
+            for (let z = 0; z < numZones; z++) {
+                const quad = quadrants[z % quadrants.length];
+                let chosenC = null, chosenR = null;
+                for (let tries = 0; tries < 60; tries++) {
+                    const c = Math.floor(Math.random() * (quad.cMax - quad.cMin + 1)) + quad.cMin;
+                    const r = Math.floor(Math.random() * (quad.rMax - quad.rMin + 1)) + quad.rMin;
+                    const key = `${c},${r}`;
+                    if (key !== '0,0' && key !== `${this.cols - 1},${this.rows - 1}` && !this.safeZoneKeys.has(key)) {
+                        chosenC = c;
+                        chosenR = r;
+                        break;
+                    }
+                }
+                if (chosenC === null) {
+                    chosenC = Math.max(1, Math.min(this.cols - 2, Math.floor((quad.cMin + quad.cMax) / 2)));
+                    chosenR = Math.max(1, Math.min(this.rows - 2, Math.floor((quad.rMin + quad.rMax) / 2)));
+                }
+                this.safeZones.push({ c: chosenC, r: chosenR });
+                this.safeZoneKeys.add(`${chosenC},${chosenR}`);
+            }
+        }
 
         this.maxSafeCharges = 2;
         this.safeChargesRemaining = 2;
@@ -1749,11 +2349,11 @@ class MazeXGame {
         this.levelStartTime = Date.now();
         this.levelElapsedTime = 0;
         this.levelHitsTaken = 0;
-        this.hintsRemaining = cfg.hints || 3;
+        this.hintsRemaining = cfg.hints !== undefined ? cfg.hints : 5;
         this.hintCooldown = 0;
         this.activeHintPath = [];
         this.hintRenderTimer = 0;
-        this.activeEffects = { speed: 0, shield: 0, freeze: 0 };
+        this.activeEffects = { speed: 0, shield: 0, freeze: 0, bubble: 0 };
 
         this.items = [];
         this.enemies = [];
@@ -1809,32 +2409,77 @@ class MazeXGame {
         // Spawn Exit Portal at bottom-right
         this.exitItem = new CollectibleItem(this.cols - 1, this.rows - 1, 'exit', this.cellSize, this.offsetX, this.offsetY);
 
-        // Spawn Enemies
-        (cfg.enemies || []).forEach(eCfg => {
-            const ec = Math.floor(Math.random() * (this.cols - 3)) + 3;
-            const er = Math.floor(Math.random() * (this.rows - 3)) + 3;
-            this.enemies.push(new ExpressiveEnemy(ec, er, eCfg.type, cfg.id, this.cellSize, this.offsetX, this.offsetY));
+        // Spawn Enemies (Max 4 pink enemies strictly enforced across all levels)
+        const maxAllowedEnemies = 4;
+        const enemyList = (cfg.enemies || []).slice(0, maxAllowedEnemies);
+
+        enemyList.forEach(eCfg => {
+            let ec = Math.floor(Math.random() * (this.cols - 3)) + 3;
+            let er = Math.floor(Math.random() * (this.rows - 3)) + 3;
+            // Prevent spawning directly in a safe zone
+            for (let tries = 0; tries < 30; tries++) {
+                if (this.isSafeZone(ec, er)) {
+                    ec = Math.floor(Math.random() * (this.cols - 3)) + 3;
+                    er = Math.floor(Math.random() * (this.rows - 3)) + 3;
+                } else {
+                    break;
+                }
+            }
+            const enemy = new ExpressiveEnemy(ec, er, eCfg.type, cfg.id, this.cellSize, this.offsetX, this.offsetY);
+            enemy.game = this;
+            this.enemies.push(enemy);
         });
 
-        // Save session for Continue
-        ProgressManager.saveSession(this.currentLevelIdx, this.score, this.lives, this.health);
+        // Save session for Continue (Fresh 3 lives and 100 health per level)
+        ProgressManager.saveSession(this.currentLevelIdx, this.score, 3, 100, this.claimedBonusLevels);
+
+        // Tactical powers button visibility for advanced sectors (Levels 13, 14, 15)
+        const powersBtn = document.getElementById('btn-hud-powers');
+        if (powersBtn) {
+            if (cfg.id >= 13) {
+                powersBtn.classList.remove('hidden');
+            } else {
+                powersBtn.classList.add('hidden');
+            }
+        }
 
         this.updateHUD();
         this.showScreen('hud');
         this.showToast(`Level ${cfg.id}: ${cfg.name}`);
+
+        if (document.activeElement && typeof document.activeElement.blur === 'function') {
+            document.activeElement.blur();
+        }
+        if (this.canvas && typeof this.canvas.focus === 'function') {
+            this.canvas.focus();
+        }
+        window.focus();
+
+        // For advanced sectors 13, 14, 15, open the tactical defense arsenal
+        if (cfg.id >= 13) {
+            setTimeout(() => {
+                if (this.currentLevelIdx === idx && this.gameState === 'PLAYING') {
+                    this.showTacticalPowersModal();
+                }
+            }, 350);
+        }
     }
 
     // --- GAME LOOP UPDATE ---
     update() {
-        if (this.gameState !== 'PLAYING') return;
+        if (this.gameState !== 'PLAYING' || this.isPowersModalOpen) return;
 
         this.levelElapsedTime = Math.floor((Date.now() - this.levelStartTime) / 1000);
 
         for (const fx in this.activeEffects) {
             if (this.activeEffects[fx] > 0) {
-                this.activeEffects[fx]--;
-                if (this.activeEffects[fx] === 0) {
-                    this.showToast(`${fx.toUpperCase()} power-up expired.`);
+                if (fx === 'shield' && this.activeEffects[fx] > 10000) {
+                    // Persistent Aegis Shield remains active until hit
+                } else {
+                    this.activeEffects[fx]--;
+                    if (this.activeEffects[fx] === 0) {
+                        this.showToast(`${fx.toUpperCase()} protection expired.`);
+                    }
                 }
             }
         }
@@ -1842,17 +2487,33 @@ class MazeXGame {
         if (this.hintRenderTimer > 0) this.hintRenderTimer--;
         if (this.portalUnlockAnim > 0) this.portalUnlockAnim--;
 
-        // Update Player
-        this.player.update(
-            this.keys,
-            this.grid,
-            this.cols,
-            this.rows,
-            this.cellSize,
-            this.offsetX,
-            this.offsetY,
-            this.activeEffects
-        );
+        // Continuous input from currently held direction (LIFO stack priority)
+        if (this.activeDirection) {
+            this.setDesiredDirection(this.activeDirection);
+        }
+
+        // Update Player with responsive path-following
+        if (this.player) {
+            this.player.update(
+                this.grid,
+                this.cols,
+                this.rows,
+                this.cellSize,
+                this.offsetX,
+                this.offsetY,
+                this.activeEffects
+            );
+        }
+
+        // Check Safe Zone entry notification & chime
+        const inSafeZoneNow = this.isPlayerInSafeZone();
+        if (inSafeZoneNow && !this.wasInSafeZone) {
+            sound.playSafeZoneEnter();
+            this.effects.addBurst(this.player.x, this.player.y, '#00ffcc', 14);
+            this.effects.addFloatText(this.player.x, this.player.y - 12, 'SANCTUARY ACTIVE', '#00ffcc');
+            this.showToast("Safe Zone: Hostiles repelled.");
+        }
+        this.wasInSafeZone = inSafeZoneNow;
 
         // Update Enemies
         const isFrozen = this.activeEffects.freeze > 0;
@@ -1866,7 +2527,8 @@ class MazeXGame {
                 this.cellSize,
                 this.offsetX,
                 this.offsetY,
-                isFrozen
+                isFrozen,
+                this
             );
 
             // Collision check: skip while enemy is vanished (defeatedTimer > 0)
@@ -1938,13 +2600,13 @@ class MazeXGame {
             this.campaignCollectibles++;
             sound.playPowerup();
             this.effects.addBurst(item.x, item.y, '#ff00aa', 20);
-            this.effects.addFloatText(item.x, item.y - 12, 'CORE SHATTERED! +200', '#ff00aa');
+            this.effects.addFloatText(item.x, item.y - 12, '+200 CORE', '#ff00aa');
         } else if (item.type === 'speed') {
             this.activeEffects.speed = 480;
             sound.playPowerup();
-            this.effects.addBurst(item.x, item.y, '#39ff14', 15);
-            this.effects.addFloatText(item.x, item.y - 10, 'SPEED BOOST', '#39ff14');
-            this.showToast("Speed Overdrive activated.");
+            this.effects.addBurst(item.x, item.y, '#39ff14', 22);
+            this.effects.addFloatText(item.x, item.y - 10, 'SPEED BOOST ⚡', '#39ff14');
+            this.showToast("Speed Overdrive engaged! Movement velocity boosted.");
         } else if (item.type === 'shield') {
             this.activeEffects.shield = 600;
             sound.playPowerup();
@@ -1952,11 +2614,11 @@ class MazeXGame {
             this.effects.addFloatText(item.x, item.y - 10, 'CYBER SHIELD', '#00bfff');
             this.showToast("Cyber Shield activated.");
         } else if (item.type === 'freeze') {
-            this.activeEffects.freeze = 360;
+            this.activeEffects.freeze = 1200; // 20s at 60fps
             sound.playFreeze();
             this.effects.addBurst(item.x, item.y, '#00f0ff', 20);
-            this.effects.addFloatText(item.x, item.y - 10, 'CRYO FREEZE', '#00f0ff');
-            this.showToast("Cryo Freeze activated. Sentinels immobilized.");
+            this.effects.addFloatText(item.x, item.y - 10, 'FREEZE (20s)', '#00f0ff');
+            this.showToast("Cryo Freeze activated. Sentinels immobilized for 20s.");
 
             // Achievement: Cryo Master
             if (ProgressManager.unlockAchievement('cryo_master')) {
@@ -1968,42 +2630,158 @@ class MazeXGame {
         this.items.splice(idx, 1);
     }
 
-    handleEnemyCollision(enemy, enemyIndex = -1) {
-        if (this.player.invulnerable > 0) return;
+    killEnemy(enemyIndex, reason = 'CYBER STRIKE') {
+        const enemy = this.enemies[enemyIndex];
+        if (!enemy) return;
 
-        // Shield absorption
-        if (this.activeEffects.shield > 0) {
-            this.activeEffects.shield = 0;
-            this.player.invulnerable = 90;
-            sound.playShieldDeflect();
-            this.triggerScreenShake();
-            this.effects.addBurst(this.player.x, this.player.y, '#00bfff', 20);
-            this.effects.addFloatText(this.player.x, this.player.y - 15, 'SHIELD DEFLECTED', '#00bfff');
-            this.showToast("Cyber Shield absorbed impact.");
+        this.enemiesKilledThisLevel++;
+        this.score += 150;
+        this.campaignScore += 150;
+        sound.playEnemyKill();
+        this.triggerScreenShake();
 
-            // Achievement: Shield Bearer
-            if (ProgressManager.unlockAchievement('shield_bearer')) {
-                this.showToast("Achievement Unlocked: Shield Bearer");
-                sound.playAchievement();
-            }
+        // Spectacular visual death burst
+        this.effects.addBurst(enemy.x, enemy.y, '#ff0055', 35);
+        this.effects.addBurst(enemy.x, enemy.y, '#00ffcc', 25);
+        this.effects.addFloatText(enemy.x, enemy.y - 15, '+150 KILL', '#ff0055');
 
-            // Enemy vanishes for 2 seconds then returns
-            enemy.defeat(120);
-            this.effects.addBurst(enemy.x, enemy.y, '#00bfff', 24);
+        this.showToast(`Sentinel destroyed via ${reason}! (${this.enemiesKilledThisLevel}/${this.maxEnemyKills} enemies killed)`);
 
-            this.updateHUD();
+        // Permanently eliminate from array so it never comes back
+        this.enemies.splice(enemyIndex, 1);
+        this.updateHUD();
+    }
+
+    triggerCyberStrike() {
+        if (this.gameState !== 'PLAYING') return;
+        const cfg = LEVELS_CONFIG[this.currentLevelIdx] || {};
+        if (cfg.id < 12) {
+            this.showToast("Cyber Strike unlocked for Level 12 onwards.");
             return;
         }
 
-        const damage = 25;
+        if (this.enemiesKilledThisLevel >= this.maxEnemyKills) {
+            this.showToast(`Max enemy kills reached for this sector (${this.maxEnemyKills}/${this.maxEnemyKills})!`);
+            return;
+        }
+
+        if (!this.player || this.enemies.length === 0) {
+            this.showToast("All hostiles already eliminated in this sector!");
+            return;
+        }
+
+        // Find closest active enemy
+        let closestDist = Infinity;
+        let closestIdx = -1;
+
+        this.enemies.forEach((enemy, idx) => {
+            if (enemy.defeatedTimer <= 0) {
+                const dist = Math.hypot(this.player.x - enemy.x, this.player.y - enemy.y);
+                if (dist < closestDist) {
+                    closestDist = dist;
+                    closestIdx = idx;
+                }
+            }
+        });
+
+        const maxRange = this.cellSize * 6.5;
+        if (closestIdx !== -1 && closestDist <= maxRange) {
+            const enemy = this.enemies[closestIdx];
+            this.effects.addBurst(this.player.x, this.player.y, '#00ffff', 20);
+            this.effects.addBurst(enemy.x, enemy.y, '#ff0055', 30);
+            this.killEnemy(closestIdx, 'CYBER STRIKE [SPACE]');
+        } else {
+            this.showToast("Hostile out of range! Move closer to sentinel to strike [SPACE].");
+        }
+    }
+
+    handleEnemyCollision(enemy, enemyIndex = -1) {
+        const cfg = LEVELS_CONFIG[this.currentLevelIdx] || {};
+        const isLevel12Plus = cfg.id >= 12;
+        const canKill = isLevel12Plus && (this.enemiesKilledThisLevel < this.maxEnemyKills);
+
+        // 1. Frozen Enemy (Cryo Freeze): Running into frozen sentinels shatters them!
+        if (this.activeEffects.freeze > 0) {
+            if (canKill && enemyIndex >= 0) {
+                this.killEnemy(enemyIndex, 'CRYO SHATTER');
+                return;
+            } else {
+                sound.playShieldDeflect();
+                this.effects.addBurst(enemy.x, enemy.y, '#00f0ff', 22);
+                this.effects.addFloatText(enemy.x, enemy.y - 15, 'CRYO DEFLECT', '#00f0ff');
+                enemy.defeat(180);
+                return;
+            }
+        }
+
+        if (this.player.invulnerable > 0) return;
+
+        // 2. Safe Zone Protection: Overloads hostile on impact!
+        if (this.isPlayerInSafeZone()) {
+            if (canKill && enemyIndex >= 0) {
+                this.killEnemy(enemyIndex, 'SANCTUARY DEFENSE');
+                return;
+            } else {
+                sound.playShieldDeflect();
+                this.triggerScreenShake();
+                this.effects.addBurst(this.player.x, this.player.y, '#00ffcc', 20);
+                this.effects.addFloatText(this.player.x, this.player.y - 15, 'SANCTUARY DEFLECT', '#00ffcc');
+                this.showToast("Safe Zone deflected hostile attack.");
+                enemy.defeat(90);
+                this.updateHUD();
+                return;
+            }
+        }
+
+        // 3. Cyber Shield / Aegis Absorption: Obliterates attacking hostile!
+        if (this.activeEffects.shield > 0) {
+            this.activeEffects.shield = 0;
+            this.player.invulnerable = 90;
+            if (canKill && enemyIndex >= 0) {
+                this.killEnemy(enemyIndex, 'AEGIS SHIELD');
+                return;
+            } else {
+                sound.playShieldDeflect();
+                this.triggerScreenShake();
+                this.effects.addBurst(this.player.x, this.player.y, '#00bfff', 20);
+                this.effects.addFloatText(this.player.x, this.player.y - 15, 'SHIELD DEFLECTED', '#00bfff');
+                this.showToast("Cyber Shield absorbed impact.");
+
+                // Achievement: Shield Bearer
+                if (ProgressManager.unlockAchievement('shield_bearer')) {
+                    this.showToast("Achievement Unlocked: Shield Bearer");
+                    sound.playAchievement();
+                }
+
+                enemy.defeat(120);
+                this.effects.addBurst(enemy.x, enemy.y, '#00bfff', 24);
+                this.updateHUD();
+                return;
+            }
+        }
+
+        let damage = 25;
+        let invulnDuration = 90;
+        let hitText = '-25 HP';
+
+        if (this.activeProtection === 'armor') {
+            damage = 12;
+            invulnDuration = 150;
+            hitText = '-12 HP';
+        }
+
         this.health -= damage;
         this.levelHitsTaken++;
-        this.player.invulnerable = 90;
+        this.player.invulnerable = invulnDuration;
         sound.playHit();
         this.triggerScreenShake();
-        this.effects.addBurst(this.player.x, this.player.y, '#ff0055', 25);
-        this.effects.addFloatText(this.player.x, this.player.y - 15, `-${damage} HP`, '#ff0055');
-        this.showToast(`Hostile strike: -${damage} HP. Health: ${Math.max(0, this.health)}%`);
+        this.effects.addBurst(this.player.x, this.player.y, this.activeProtection === 'armor' ? '#ffd700' : '#ff0055', 25);
+        this.effects.addFloatText(this.player.x, this.player.y - 15, hitText, this.activeProtection === 'armor' ? '#ffd700' : '#ff0055');
+        if (this.activeProtection === 'armor') {
+            this.showToast(`Nanite Armor absorbed 50% damage: -12 HP (Health: ${Math.max(0, this.health)}%)`);
+        } else {
+            this.showToast(`Hostile strike: -25 HP (Health: ${Math.max(0, this.health)}%)`);
+        }
 
         // Enemy vanishes for 2 seconds then comes back
         enemy.defeat(120);
@@ -2100,11 +2878,30 @@ class MazeXGame {
             stars = 2;
         }
 
-        const timeBonus = Math.max(0, (cfg.targetTime * 2 - timeTaken) * 10);
-        const starBonus = stars * 100;
-        this.score += timeBonus + starBonus;
-        this.campaignScore += timeBonus + starBonus;
+        // Milestone Completion Bonus (Awarded once per game run; resets on game restart):
+        // Level 1: +500 pts
+        // Level 5: +1000 pts
+        // Level 10: +1500 pts
+        // Level 15: +2000 pts
+        // In-between levels: 0 bonus pts
+        let milestoneBonus = 0;
+        if (cfg.id === 1) milestoneBonus = 500;
+        else if (cfg.id === 5) milestoneBonus = 1000;
+        else if (cfg.id === 10) milestoneBonus = 1500;
+        else if (cfg.id === 15) milestoneBonus = 2000;
+
+        let completionBonus = 0;
+        if (milestoneBonus > 0) {
+            if (!this.claimedBonusLevels.includes(cfg.id)) {
+                completionBonus = milestoneBonus;
+                this.claimedBonusLevels.push(cfg.id);
+            }
+        }
+
+        this.score += completionBonus;
+        this.campaignScore += completionBonus;
         this.campaignTime += timeTaken;
+        this.updateHUD();
 
         // Completing Level 1 unlocks ALL 15 levels immediately!
         ProgressManager.setUnlockedLevel(15);
@@ -2141,9 +2938,30 @@ class MazeXGame {
             sound.playAchievement();
         }
 
-        // Save session for continue
-        if (this.currentLevelIdx + 1 < LEVELS_CONFIG.length) {
-            ProgressManager.saveSession(this.currentLevelIdx + 1, this.score, this.lives, this.health);
+        // Check if ALL 15 levels are now fully conquered
+        const allCompleted = this.areAllLevelsCompleted();
+
+        if (allCompleted) {
+            ProgressManager.clearSavedSession();
+            if (ProgressManager.unlockAchievement('grand_champion')) {
+                this.showToast("Achievement Unlocked: Grand Champion - All 15 Sectors Conquered!");
+                sound.playAchievement();
+            }
+            setTimeout(() => this.showVictoryScreen(), 1200);
+            return;
+        }
+
+        // Not all levels are completed yet. Determine next target incomplete level:
+        let nextTargetIdx = -1;
+        const starsMap = ProgressManager.getLevelStars();
+        if (this.currentLevelIdx + 1 < LEVELS_CONFIG.length && (!starsMap[this.currentLevelIdx + 2] || starsMap[this.currentLevelIdx + 2] === 0)) {
+            nextTargetIdx = this.currentLevelIdx + 1;
+        } else {
+            nextTargetIdx = this.getFirstIncompleteLevelIndex();
+        }
+
+        if (nextTargetIdx !== -1) {
+            ProgressManager.saveSession(nextTargetIdx, this.score, 3, 100, this.claimedBonusLevels);
         } else {
             ProgressManager.clearSavedSession();
         }
@@ -2168,15 +2986,35 @@ class MazeXGame {
         document.getElementById('lc-coins').innerText = `${this.collectedCoins}/${this.requiredCoins}`;
         document.getElementById('lc-time').innerText = timeStr;
         document.getElementById('lc-lives').innerText = `${this.lives}`;
-        document.getElementById('lc-score').innerText = `+${timeBonus + starBonus}`;
+        document.getElementById('lc-score').innerText = completionBonus > 0 ? `+${completionBonus}` : `0`;
 
-        if (this.currentLevelIdx === 14) {
-            if (ProgressManager.unlockAchievement('grand_champion')) {
-                this.showToast("Achievement Unlocked: Grand Champion");
-                sound.playAchievement();
+        // Dynamic Next Level button text
+        const btnNextLevel = document.getElementById('btn-next-level');
+        if (btnNextLevel) {
+            if (nextTargetIdx !== -1) {
+                if (nextTargetIdx === this.currentLevelIdx + 1) {
+                    btnNextLevel.innerText = 'NEXT LEVEL';
+                } else {
+                    btnNextLevel.innerText = `CONTINUE LEVEL ${nextTargetIdx + 1}`;
+                }
+            } else {
+                btnNextLevel.innerText = 'NEXT LEVEL';
             }
-            setTimeout(() => this.showVictoryScreen(), 1200);
-            return;
+        }
+
+        if (completionBonus > 0) {
+            this.showToast(`Level ${cfg.id} Cleared! Milestone Bonus: +${completionBonus} PTS!`);
+        } else if (milestoneBonus > 0) {
+            this.showToast(`Level ${cfg.id} Replayed: Milestone bonus already claimed in this run.`);
+        }
+
+        // If Level 15 (or any advanced sector) was cleared while earlier sectors remain open:
+        const completedCount = this.getCompletedLevelsCount();
+        const remainingCount = 15 - completedCount;
+        if (remainingCount > 0 && this.currentLevelIdx === 14) {
+            setTimeout(() => {
+                this.showToast(`Sector 15 Cleared! ${remainingCount} uncompleted sector${remainingCount > 1 ? 's' : ''} left before Final Victory.`);
+            }, 1000);
         }
 
         this.showScreen('complete');
@@ -2223,12 +3061,137 @@ class MazeXGame {
         const secs = this.campaignTime % 60;
         const timeStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 
-        document.getElementById('vic-total-score').innerText = this.campaignScore.toLocaleString();
+        document.getElementById('vic-total-score').innerText = Math.max(this.score, this.campaignScore).toLocaleString();
         document.getElementById('vic-total-time').innerText = timeStr;
         document.getElementById('vic-total-coins').innerText = this.campaignCollectibles;
         document.getElementById('vic-total-stars').innerText = `${totalStars} / 45`;
 
         this.showScreen('victory');
+    }
+
+    // ================= TACTICAL DEFENSE ARSENAL (Levels 13, 14, 15) =================
+    showTacticalPowersModal() {
+        if (!this.screens.tacticalPowers) return;
+        this.clearInput();
+        this.isPowersModalOpen = true;
+        this.renderTacticalPowersModal();
+        this.screens.tacticalPowers.classList.remove('hidden');
+    }
+
+    hideTacticalPowersModal() {
+        if (!this.screens.tacticalPowers) return;
+        this.clearInput();
+        this.isPowersModalOpen = false;
+        this.screens.tacticalPowers.classList.add('hidden');
+        if (document.activeElement && typeof document.activeElement.blur === 'function') {
+            document.activeElement.blur();
+        }
+        if (this.canvas && typeof this.canvas.focus === 'function') {
+            this.canvas.focus();
+        }
+        window.focus();
+        this.updateHUD();
+    }
+
+    renderTacticalPowersModal() {
+        const gridEl = document.getElementById('powers-grid');
+        const scoreEl = document.getElementById('powers-current-score');
+        const cfg = LEVELS_CONFIG[this.currentLevelIdx] || {};
+
+        if (scoreEl) scoreEl.innerText = this.score.toLocaleString();
+
+        if (!gridEl) return;
+        gridEl.innerHTML = '';
+
+        TACTICAL_POWERS_DEF.forEach(power => {
+            const isEquipped = (this.activeProtection === power.id) ||
+                (power.id === 'shield' && this.activeEffects.shield > 0) ||
+                (power.id === 'freeze' && this.activeEffects.freeze > 0) ||
+                (power.id === 'bubble' && this.activeEffects.bubble > 0);
+            const canAfford = this.score >= power.cost;
+
+            const card = document.createElement('div');
+            card.className = `power-card ${isEquipped ? 'equipped' : ''}`;
+
+            let buttonText = 'EQUIP';
+            let isDisabled = false;
+
+            if (isEquipped) {
+                if (power.id === 'freeze' && this.activeEffects.freeze > 0) {
+                    buttonText = `❄️ ACTIVE (${Math.ceil(this.activeEffects.freeze / 60)}s)`;
+                } else if (power.id === 'bubble' && this.activeEffects.bubble > 0) {
+                    buttonText = `💠 ACTIVE (${Math.ceil(this.activeEffects.bubble / 60)}s)`;
+                } else if (power.id === 'shield' && this.activeEffects.shield > 0) {
+                    buttonText = '🛡️ READY';
+                } else {
+                    buttonText = '✓ EQUIPPED';
+                }
+                isDisabled = true;
+            } else if (!canAfford) {
+                buttonText = 'LOCKED';
+                isDisabled = true;
+            }
+
+            card.innerHTML = `
+                <div class="power-card-header">
+                    <span class="power-card-icon">${power.icon}</span>
+                    <span class="power-card-title">${power.title}</span>
+                </div>
+                <p class="power-card-desc">${power.desc}</p>
+                <div class="power-card-footer">
+                    <span class="power-cost-tag">🪙 ${power.cost} PTS</span>
+                    <button class="btn-power-select ${isEquipped ? 'btn-equipped' : canAfford ? 'btn-can-equip' : ''}" data-id="${power.id}" ${isDisabled ? 'disabled' : ''}>
+                        ${buttonText}
+                    </button>
+                </div>
+            `;
+
+            const btn = card.querySelector('.btn-power-select');
+            if (btn && !isEquipped && canAfford) {
+                btn.addEventListener('click', () => {
+                    sound.playClick();
+                    this.equipTacticalPower(power.id);
+                });
+            }
+
+            gridEl.appendChild(card);
+        });
+    }
+
+    equipTacticalPower(powerId) {
+        const power = TACTICAL_POWERS_DEF.find(p => p.id === powerId);
+        if (!power) return;
+        if (this.score < power.cost) {
+            this.showToast(`Insufficient score! Need ${power.cost} points.`);
+            return;
+        }
+
+        this.score -= power.cost;
+        this.activeProtection = powerId;
+
+        if (powerId === 'shield') {
+            this.activeEffects.shield = 999999;
+            this.showToast(`Aegis Forcefield equipped (-${power.cost} pts): Deflects next hostile attack!`);
+            sound.playShieldDeflect();
+            this.effects.addBurst(this.player ? this.player.x : this.canvas.width / 2, this.player ? this.player.y : this.canvas.height / 2, '#00bfff', 18);
+        } else if (powerId === 'freeze') {
+            this.activeEffects.freeze = 1200; // 20s at 60fps
+            this.showToast(`Chrono Cryo Stasis engaged (-${power.cost} pts): Hostile pink sentinels frozen for 20s!`);
+            sound.playFreeze();
+            this.effects.addBurst(this.player ? this.player.x : this.canvas.width / 2, this.player ? this.player.y : this.canvas.height / 2, '#00f0ff', 24);
+        } else if (powerId === 'armor') {
+            this.showToast(`Nanite Composite Armor equipped (-${power.cost} pts): Incoming collision damage reduced by 50%!`);
+            sound.playPowerup();
+            this.effects.addBurst(this.player ? this.player.x : this.canvas.width / 2, this.player ? this.player.y : this.canvas.height / 2, '#ffd700', 20);
+        } else if (powerId === 'bubble') {
+            this.activeEffects.bubble = 900;
+            this.showToast(`Portable Sanctuary Bubble active (-${power.cost} pts): Mobile Safe Zone engaged for 15s!`);
+            sound.playPowerup();
+            this.effects.addBurst(this.player ? this.player.x : this.canvas.width / 2, this.player ? this.player.y : this.canvas.height / 2, '#00ffcc', 22);
+        }
+
+        this.updateHUD();
+        this.renderTacticalPowersModal();
     }
 
     // --- UPDATE IN-GAME HUD ---
@@ -2278,22 +3241,6 @@ class MazeXGame {
             }
         }
 
-        // Power-up badges
-        const pTimers = document.getElementById('powerup-timers');
-        pTimers.innerHTML = '';
-        if (this.activeEffects.speed > 0) {
-            const sec = Math.ceil(this.activeEffects.speed / 60);
-            pTimers.innerHTML += `<span class="powerup-badge speed">⚡ SPEED ${sec}s</span>`;
-        }
-        if (this.activeEffects.shield > 0) {
-            const sec = Math.ceil(this.activeEffects.shield / 60);
-            pTimers.innerHTML += `<span class="powerup-badge shield">🛡️ SHIELD ${sec}s</span>`;
-        }
-        if (this.activeEffects.freeze > 0) {
-            const sec = Math.ceil(this.activeEffects.freeze / 60);
-            pTimers.innerHTML += `<span class="powerup-badge freeze">❄️ FREEZE ${sec}s</span>`;
-        }
-
         // Hint button state
         const hintBtn = document.getElementById('btn-hud-hint');
         const hintBadge = document.getElementById('hint-badge');
@@ -2308,6 +3255,28 @@ class MazeXGame {
         }
     }
 
+    isSafeZone(c, r) {
+        if (!this.safeZoneKeys) return false;
+        return this.safeZoneKeys.has(`${c},${r}`);
+    }
+
+    isStandingInMazeSafeZone() {
+        if (!this.player || !this.safeZoneKeys || this.safeZoneKeys.size === 0) return false;
+        if (this.isSafeZone(this.player.c, this.player.r)) return true;
+        for (const sz of this.safeZones) {
+            const szCenterX = this.offsetX + sz.c * this.cellSize + this.cellSize / 2;
+            const szCenterY = this.offsetY + sz.r * this.cellSize + this.cellSize / 2;
+            const dist = Math.hypot(this.player.x - szCenterX, this.player.y - szCenterY);
+            if (dist < this.cellSize * 0.65) return true;
+        }
+        return false;
+    }
+
+    isPlayerInSafeZone() {
+        if (this.activeEffects && this.activeEffects.bubble > 0) return true;
+        return this.isStandingInMazeSafeZone();
+    }
+
     // --- CANVAS RENDERING ---
     draw() {
         this.ctx.fillStyle = '#05070b';
@@ -2320,6 +3289,7 @@ class MazeXGame {
 
         if (this.gameState === 'PLAYING' || this.gameState === 'PAUSED' || this.gameState === 'LEVEL_COMPLETE' || this.gameState === 'GAME_OVER') {
             this.drawMaze();
+            this.drawSafeZones();
             this.drawHintTrail();
 
             this.items.forEach(it => it.draw(this.ctx));
@@ -2328,10 +3298,92 @@ class MazeXGame {
             const isFrozen = this.activeEffects.freeze > 0;
             this.enemies.forEach(e => e.draw(this.ctx, isFrozen, this.player));
 
-            if (this.player) this.player.draw(this.ctx, this.activeEffects);
+            if (this.player) this.player.draw(this.ctx, this.activeEffects, this.isPlayerInSafeZone(), this.activeProtection);
 
             this.effects.draw(this.ctx);
         }
+    }
+
+    drawSafeZones() {
+        if (!this.safeZones || this.safeZones.length === 0) return;
+        const ctx = this.ctx;
+        const now = Date.now();
+        const pulse = 0.5 + 0.35 * Math.sin(now / 320);
+
+        this.safeZones.forEach(sz => {
+            const x = this.offsetX + sz.c * this.cellSize;
+            const y = this.offsetY + sz.r * this.cellSize;
+            const cx = x + this.cellSize / 2;
+            const cy = y + this.cellSize / 2;
+            const size = this.cellSize;
+
+            ctx.save();
+
+            // Holographic floor gradient
+            const grad = ctx.createRadialGradient(cx, cy, 2, cx, cy, size * 0.65);
+            grad.addColorStop(0, `rgba(0, 255, 204, ${0.28 + pulse * 0.14})`);
+            grad.addColorStop(0.7, `rgba(0, 180, 255, ${0.12 + pulse * 0.08})`);
+            grad.addColorStop(1, 'rgba(0, 25, 50, 0)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(x + 1, y + 1, size - 2, size - 2);
+
+            // Glowing border brackets
+            ctx.strokeStyle = `rgba(0, 255, 204, ${0.6 + pulse * 0.35})`;
+            ctx.lineWidth = Math.max(1.5, size * 0.08);
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#00ffcc';
+
+            const pad = Math.max(2, size * 0.1);
+            const cornerLen = Math.max(3, size * 0.22);
+
+            // Corner brackets
+            ctx.beginPath();
+            ctx.moveTo(x + pad, y + pad + cornerLen);
+            ctx.lineTo(x + pad, y + pad);
+            ctx.lineTo(x + pad + cornerLen, y + pad);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(x + size - pad - cornerLen, y + pad);
+            ctx.lineTo(x + size - pad, y + pad);
+            ctx.lineTo(x + size - pad, y + pad + cornerLen);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(x + size - pad, y + size - pad - cornerLen);
+            ctx.lineTo(x + size - pad, y + size - pad);
+            ctx.lineTo(x + size - pad - cornerLen, y + size - pad);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(x + pad + cornerLen, y + size - pad);
+            ctx.lineTo(x + pad, y + size - pad);
+            ctx.lineTo(x + pad, y + size - pad - cornerLen);
+            ctx.stroke();
+
+            // Shield Crest inside safe zone
+            const ringR = Math.max(4, size * 0.22);
+            ctx.strokeStyle = `rgba(0, 255, 204, ${0.75 + pulse * 0.25})`;
+            ctx.lineWidth = 1.6;
+            ctx.beginPath();
+            ctx.arc(cx, cy, ringR, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.fillStyle = `rgba(0, 255, 204, ${0.85 + pulse * 0.15})`;
+            ctx.beginPath();
+            const sw = ringR * 0.65;
+            const sh = ringR * 0.8;
+            ctx.moveTo(cx, cy - sh * 0.6);
+            ctx.lineTo(cx + sw, cy - sh * 0.2);
+            ctx.lineTo(cx + sw * 0.7, cy + sh * 0.55);
+            ctx.lineTo(cx, cy + sh);
+            ctx.lineTo(cx - sw * 0.7, cy + sh * 0.55);
+            ctx.lineTo(cx - sw, cy - sh * 0.2);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.restore();
+        });
     }
 
     drawMaze() {

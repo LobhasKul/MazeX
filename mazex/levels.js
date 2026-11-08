@@ -12,6 +12,6 @@ const LevelsConfig = [
     { id: 11, name: "The Vault", grid: {w: 29, h: 21}, enemies: ['ambusher', 'trapper', 'phantom'], orbs: 50, keys: 1, dark: false },
     { id: 12, name: "Chaos Maze", grid: {w: 31, h: 21}, enemies: ['phantom', 'phantom', 'hunter'], orbs: 55, dark: false, chaos: true },
     { id: 13, name: "Phantom Protocol", grid: {w: 31, h: 23}, enemies: ['phantom', 'phantom', 'trapper', 'ambusher'], orbs: 60, dark: true },
-    { id: 14, name: "The Final Hunt", grid: {w: 35, h: 25}, enemies: ['hunter', 'ambusher', 'trapper', 'phantom', 'scout'], orbs: 70, keys: 2, teleport: true, dark: true },
+    { id: 14, name: "The Final Hunt", grid: {w: 35, h: 25}, enemies: ['hunter', 'ambusher', 'trapper', 'phantom'], orbs: 70, keys: 2, teleport: true, dark: true },
     { id: 15, name: "MAZEX: THE CORE", grid: {w: 35, h: 25}, enemies: ['boss'], orbs: 0, cores: 3, dark: false }
 ];

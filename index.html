@@ -46,12 +46,12 @@
                 <div class="mission-wrapper">
                     <span id="mission-text">Collect all coins: 0/10</span>
                 </div>
-                <div id="powerup-timers" class="powerup-timers">
-                    <!-- Dynamic badges: SPEED, SHIELD, FREEZE -->
-                </div>
                 <div class="hud-buttons">
+                    <button id="btn-hud-powers" class="hud-btn powers-btn hidden" title="Tactical Defense Arsenal [B]">
+                        POWERS
+                    </button>
                     <button id="btn-hud-hint" class="hud-btn hint-btn" title="Highlight path to objective [H]">
-                        HINT <span id="hint-badge">(3)</span>
+                        HINT <span id="hint-badge">(5)</span>
                     </button>
                     <button id="btn-hud-pause" class="hud-btn pause-btn" title="Pause Game [P / ESC]">
                         PAUSE
@@ -62,7 +62,7 @@
 
         <!-- Canvas Area -->
         <div id="canvas-container">
-            <canvas id="gameCanvas" width="800" height="520"></canvas>
+            <canvas id="gameCanvas" width="800" height="520" tabindex="0"></canvas>
             <canvas id="confettiCanvas" width="800" height="520" class="hidden"></canvas>
         </div>
 
@@ -119,15 +119,17 @@
                 </div>
                 <div class="how-to-scroll">
                     <div class="guide-block">
-                        <h4 class="guide-title">Objective</h4>
-                        <p>Level 1 requires collecting all coins to unlock the exit portal. In Levels 2 through 15, coin collection is optional bonus score, and the exit portal is open from the start.</p>
+                        <h4 class="guide-title">Objective &amp; Lives</h4>
+                        <p><strong>Fresh 3 Lives &amp; 100% Health</strong> are granted at the start of every single level — no life loss carries over between sectors! Level 1 requires collecting all coins to unlock the portal. In Levels 2 through 15, coin collection is optional bonus score, and the exit portal is active immediately.</p>
                     </div>
 
                     <div class="guide-block">
                         <h4 class="guide-title">Controls</h4>
                         <div class="guide-pills">
-                            <span class="pill"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / <kbd>Arrows</kbd> — Move</span>
-                            <span class="pill"><kbd>H</kbd> — Hint Path</span>
+                            <span class="pill"><kbd>Arrows</kbd> / <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / <kbd>Home</kbd><kbd>End</kbd><kbd>PgUp</kbd><kbd>PgDn</kbd> / <kbd>Numpad</kbd> — Move</span>
+                            <span class="pill"><kbd>SPACE</kbd> — Cyber Strike (Kill up to 3 enemies in Levels 12–15)</span>
+                            <span class="pill"><kbd>H</kbd> — Navigation Hint (5 Hints Per Level)</span>
+                            <span class="pill"><kbd>B</kbd> — Tactical Powers Arsenal (Levels 13–15)</span>
                             <span class="pill"><kbd>P</kbd> / <kbd>ESC</kbd> — Pause Game</span>
                         </div>
                     </div>
@@ -135,27 +137,43 @@
                     <div class="guide-block">
                         <h4 class="guide-title">Enemies &amp; Combat</h4>
                         <ul class="guide-list">
-                            <li><strong>Enemy Collision</strong> — Touching an active pink enemy inflicts <strong>25 damage</strong>. If health drops to zero, 1 Life is lost. If all lives are lost, the mission ends.</li>
-                            <li><strong>Random Cyber Operatives</strong> — Each deployment assigns a random cyber operative with unique aesthetic armor, animations, and radar signatures.</li>
-                            <li><strong>AI Personalities</strong> — Blinky chases directly, Pinky ambushes ahead, Inky patrols fast, and Clyde guards key paths.</li>
+                            <li><strong>Enemy Elimination (Levels 12–15)</strong> — You can permanently kill enemies 2 to 3 times per sector on your way to the exit portal! Destroy them using Cyber Strike (<kbd>SPACE</kbd>), by running into frozen enemies (Cryo Shatter), via Aegis Shield deflection, or Safe Zone defense.</li>
+                            <li><strong>Collision Damage</strong> — Touching an active pink enemy inflicts 25 damage. If health drops to zero, 1 Life is lost. When a life is lost, health restores to 100%.</li>
+                            <li><strong>Max 4 Pink Enemies</strong> — Difficulty scales progressively from simpler to harder, strictly capped at a maximum of 4 pink enemies in any sector.</li>
+                            <li><strong>Safe Zones (Levels 11–15)</strong> — Advanced sectors feature glowing cyan Safe Zones. Enemies cannot enter or attack you while inside!</li>
+                            <li><strong>5 Total Hints</strong> — Every sector provides 5 navigation hints to highlight the optimal corridor path to the exit.</li>
                         </ul>
                     </div>
 
                     <div class="guide-block">
-                        <h4 class="guide-title">Power-Ups</h4>
+                        <h4 class="guide-title">Tactical Cyber Arsenal (Levels 13, 14 &amp; 15)</h4>
+                        <p>In high-tier sectors, open the Tactical Arsenal (<kbd>B</kbd> or <strong>POWERS</strong> button) to equip defensive protection using your accumulated score:</p>
+                        <ul class="guide-list">
+                            <li><strong>🛡️ Aegis Forcefield (80 Pts)</strong> — Absorbs the next enemy strike completely and deflects the attacker with zero damage.</li>
+                            <li><strong>❄️ Chrono Cryo Stasis (140 Pts)</strong> — Freezes all hostile pink sentinels for 20 seconds.</li>
+                            <li><strong>⚙️ Nanite Composite Armor (200 Pts)</strong> — Hexagonal cyber-shield cuts collision damage by 50% (only 12 HP lost) and grants 2.5x longer invulnerability.</li>
+                            <li><strong>💠 Portable Sanctuary Bubble (280 Pts)</strong> — Creates a mobile Safe Zone around you for 15 seconds that repels enemies everywhere.</li>
+                        </ul>
+                    </div>
+
+                    <div class="guide-block">
+                        <h4 class="guide-title">Collectible Power-Ups</h4>
                         <ul class="guide-list">
                             <li><strong>Speed Overdrive</strong> — Boosts movement velocity by 60%.</li>
                             <li><strong>Cyber Shield</strong> — Absorbs one lethal enemy collision safely.</li>
-                            <li><strong>Cryo Freeze</strong> — Freezes all enemy sentinels in place.</li>
+                            <li><strong>Cryo Freeze</strong> — Freezes all enemy sentinels in place for 20 seconds.</li>
+                            <li><strong>Bonus Gems &amp; Cores</strong> — Grant substantial score bonuses (+50 to +200) to invest in tactical defenses.</li>
                         </ul>
                     </div>
 
                     <div class="guide-block">
-                        <h4 class="guide-title">Tactical Tips</h4>
+                        <h4 class="guide-title">Sector Milestone Completion Bonuses</h4>
                         <ul class="guide-list">
-                            <li>The exit portal stays dormant until all required coins and cores are collected.</li>
-                            <li>Use hints sparingly to calculate the shortest path to objectives.</li>
-                            <li>Watch enemy gaze direction to predict incoming ambushes.</li>
+                            <li><strong>Level 1 Completion</strong> — <strong>+500 Bonus Points</strong> awarded upon clearing.</li>
+                            <li><strong>Level 5 Completion</strong> — <strong>+1,000 Bonus Points</strong> awarded upon clearing.</li>
+                            <li><strong>Level 10 Completion</strong> — <strong>+1,500 Bonus Points</strong> awarded upon clearing.</li>
+                            <li><strong>Level 15 Completion</strong> — <strong>+2,000 Bonus Points</strong> awarded upon final victory!</li>
+                            <li><strong>In-Between Levels</strong> — Standard clearing with <strong>0 bonus points</strong> (pure skill &amp; collectible score).</li>
                         </ul>
                     </div>
                 </div>
@@ -345,6 +363,32 @@
             </div>
         </div>
 
+        <!-- TACTICAL CYBER DEFENSE ARSENAL (Levels 13, 14, 15) -->
+        <div id="screen-tactical-powers" class="screen hidden">
+            <div class="screen-modal tactical-powers-modal">
+                <button class="btn-modal-close" id="btn-close-powers-x" title="Close">✕</button>
+                <div class="modal-header">
+                    <h2 class="glow-cyan">TACTICAL CYBER ARSENAL</h2>
+                </div>
+
+                <div class="powers-score-banner">
+                    <div>
+                        <span class="score-banner-label">AVAILABLE SCORE</span>
+                        <div class="score-banner-sub">Tactical defense budget + earned points</div>
+                    </div>
+                    <span id="powers-current-score" class="score-banner-val">0</span>
+                </div>
+
+                <div class="powers-grid" id="powers-grid">
+                    <!-- Dynamic Power Cards -->
+                </div>
+
+                <div class="powers-modal-actions">
+                    <button id="btn-powers-deploy" class="btn btn-primary btn-deploy-hero">ENGAGE SECTOR</button>
+                </div>
+            </div>
+        </div>
+
         <!-- 9. LEVEL COMPLETE SCREEN (Horizontal Action Buttons) -->
         <div id="screen-level-complete" class="screen hidden">
             <div class="screen-modal complete-modal">
@@ -458,6 +502,7 @@
                 <button class="dpad-btn down" id="dpad-down">▼</button>
             </div>
             <div class="mobile-actions">
+                <button class="mobile-btn" id="m-btn-strike" title="Strike (Level 12+)">⚡</button>
                 <button class="mobile-btn" id="m-btn-hint" title="Hint">💡</button>
                 <button class="mobile-btn" id="m-btn-pause" title="Pause">⏸</button>
             </div>
